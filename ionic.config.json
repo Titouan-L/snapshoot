@@ -1,0 +1,8 @@
+{
+  "name": "Snapshoot",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite",
+  "id": "433b6583"
+}
