@@ -10,13 +10,16 @@ import {
   IonRefresherContent,
   IonTitle,
   IonToolbar,
+  IonButtons,
   useIonViewWillEnter
 } from '@ionic/react';
+import { useAuth } from '../hooks/useAuth';
+import LogoutButton from '../components/LogoutButton';
 import './Home.css';
 
 const Home: React.FC = () => {
-
   const [messages, setMessages] = useState<Message[]>([]);
+  const { currentUser } = useAuth();
 
   useIonViewWillEnter(() => {
     const msgs = getMessages();
@@ -34,9 +37,19 @@ const Home: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Inbox</IonTitle>
+          <IonButtons slot="end">
+            <LogoutButton />
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
+        {/* Message de bienvenue affichant le nom d'utilisateur */}
+        {currentUser && (
+          <div className="welcome-container">
+            <h2>Bienvenue {currentUser.username} sur Snapshoot</h2>
+          </div>
+        )}
+
         <IonRefresher slot="fixed" onIonRefresh={refresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>

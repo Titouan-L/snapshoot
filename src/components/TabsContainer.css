@@ -1,0 +1,15 @@
+.main-tab-bar {
+  --background: rgba(0, 0, 0, 0.9);
+  --color: rgba(255, 255, 255, 0.7);
+  --color-selected: white;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.main-tab-bar ion-tab-button {
+  --padding-top: 5px;
+  --padding-bottom: 5px;
+}
+
+.main-tab-bar ion-icon {
+  font-size: 24px;
+}

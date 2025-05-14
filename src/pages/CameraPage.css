@@ -1,0 +1,114 @@
+.camera-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #000;
+}
+
+.welcome-container {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  z-index: 10;
+}
+
+.welcome-container h2 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.welcome-container p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.camera-actions {
+  position: absolute;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.camera-button, .video-button {
+  --border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.camera-button {
+  --background: #4080ff;
+}
+
+.video-button {
+  --background: #ff4080;
+}
+
+.recording-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.video-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recording-timer {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.recording-actions {
+  position: absolute;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.media-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.media-preview img,
+.media-preview video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.media-actions {
+  position: absolute;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+}

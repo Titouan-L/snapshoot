@@ -1,8 +1,10 @@
 import { Redirect, Route } from 'react-router-dom';
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import Home from './pages/Home';
-import ViewMessage from './pages/ViewMessage';
+import Login from './pages/Login';
+import TabsContainer from './components/TabsContainer';
+import { AuthProvider } from './hooks/useAuth';
+import PrivateRoute from './components/PrivateRoute';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -38,19 +40,22 @@ setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        <Route path="/" exact={true}>
-          <Redirect to="/home" />
-        </Route>
-        <Route path="/home" exact={true}>
-          <Home />
-        </Route>
-        <Route path="/message/:id">
-           <ViewMessage />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
+    <AuthProvider>
+      <IonReactRouter>
+        <IonRouterOutlet>
+          <Route path="/login" exact={true}>
+            <Login />
+          </Route>
+          <PrivateRoute path="/tabs" component={TabsContainer} />
+          <Route path="/" exact={true}>
+            <Redirect to="/tabs" />
+          </Route>
+          <Route>
+            <Redirect to="/tabs" />
+          </Route>
+        </IonRouterOutlet>
+      </IonReactRouter>
+    </AuthProvider>
   </IonApp>
 );
 
