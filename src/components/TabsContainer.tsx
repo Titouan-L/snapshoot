@@ -1,9 +1,10 @@
 import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonRouterOutlet } from '@ionic/react';
 import { Route, Redirect } from 'react-router';
-import { camera, mail } from 'ionicons/icons';
+import { camera, mail, person } from 'ionicons/icons';
 import CameraPage from '../pages/CameraPage';
 import Home from '../pages/Home';
 import ViewMessage from '../pages/ViewMessage';
+import ProfilePage from '../pages/ProfilePage';
 import './TabsContainer.css';
 
 const TabsContainer: React.FC = () => {
@@ -19,6 +20,9 @@ const TabsContainer: React.FC = () => {
         <Route path="/tabs/messages/:id">
           <ViewMessage />
         </Route>
+        <Route exact path="/tabs/profile">
+          <ProfilePage />
+        </Route>
         <Route exact path="/tabs">
           <Redirect to="/tabs/camera" />
         </Route>
@@ -32,6 +36,10 @@ const TabsContainer: React.FC = () => {
         <IonTabButton tab="messages" href="/tabs/messages">
           <IonIcon icon={mail} />
           <IonLabel>Messages</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="profile" href="/tabs/profile">
+          <IonIcon icon={person} />
+          <IonLabel>Mon Compte</IonLabel>
         </IonTabButton>
       </IonTabBar>
     </IonTabs>

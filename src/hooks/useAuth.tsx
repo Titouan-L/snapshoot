@@ -8,6 +8,13 @@ export interface User {
   id: string;
   email: string;
   username: string;
+  profilePicture?: string | null;
+}
+
+interface UpdateUserData {
+  username?: string;
+  email?: string;
+  profilePicture?: string | null;
 }
 
 interface AuthContextType {
@@ -15,6 +22,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   register: (username: string, email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
+  updateUserProfile?: (data: UpdateUserData) => Promise<User>;
   isAuthenticated: boolean;
 }
 
@@ -84,6 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
 
           setCurrentUser(user);
+          history.push('/tabs/camera'); // Redirection vers la page de caméra après connexion
           resolve(user);
         } catch (error) {
           reject(error);
@@ -127,12 +136,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Update user profile function
+  const updateUserProfile = async (data: UpdateUserData): Promise<User> => {
+    return new Promise<User>((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          // Si nous avons un utilisateur connecté
+          if (currentUser) {
+            // Créer un nouvel objet utilisateur avec les données mises à jour
+            const updatedUser: User = {
+              ...currentUser,
+              username: data.username || currentUser.username,
+              email: data.email || currentUser.email,
+              profilePicture: data.profilePicture !== undefined ? data.profilePicture : currentUser.profilePicture
+            };
+
+            // Enregistrer les données mises à jour
+            await Preferences.set({
+              key: 'currentUser',
+              value: JSON.stringify(updatedUser)
+            });
+
+            // Mettre à jour l'état
+            setCurrentUser(updatedUser);
+            resolve(updatedUser);
+          } else {
+            reject(new Error("Aucun utilisateur connecté"));
+          }
+        } catch (error) {
+          reject(error);
+        }
+      }, 1000); // Simuler un délai réseau
+    });
+  };
+
   // Value object to be provided to consuming components
   const value: AuthContextType = {
     currentUser,
     login,
     register,
     logout,
+    updateUserProfile,
     isAuthenticated: !!currentUser
   };
 
