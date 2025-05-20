@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Message, getMessage } from '../data/messages';
+import { Message, getMessage } from '../../data/messages';
 import {
   IonBackButton,
   IonButtons,

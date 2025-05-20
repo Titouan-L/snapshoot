@@ -1,0 +1,160 @@
+/* Home.css - Style adapté à la charte graphique Snapshoot */
+
+/* Variables globales de couleurs et styles */
+:root {
+    --primary-gradient: linear-gradient(120deg, #8c52ff 0%, #22eaaa 100%);
+    --primary-color: #8c52ff;
+    --secondary-color: #22eaaa;
+    --text-light: #ffffff;
+    --text-dark: #2d3047;
+    --font-family: "Montserrat", sans-serif;
+    --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Style général de la page */
+.home-page {
+    --background: var(--primary-gradient);
+    font-family: var(--font-family);
+}
+
+/* Style pour le mode caméra */
+.camera-preview {
+    --background: transparent;
+}
+
+/* Container avec Safe Area */
+.safe-area-container {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+        env(safe-area-inset-bottom) env(safe-area-inset-left);
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+}
+
+/* Message de bienvenue */
+.welcome-container {
+    text-align: center;
+    padding-top: 60px;
+    padding-bottom: 20px;
+    animation: fade-in-down 0.5s ease-out forwards;
+}
+
+.welcome-container h2 {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 24px;
+    font-weight: 700;
+    font-family: var(--font-family);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Container pour la demande de permission caméra */
+.camera-permission-container {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 24px;
+    text-align: center;
+    animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.permission-button {
+    --background: var(--secondary-color);
+    --background-activated: #1cd89b;
+    --border-radius: 12px;
+    margin-top: 20px;
+    height: 52px;
+    font-weight: 600;
+    font-size: 16px;
+    font-family: var(--font-family);
+    --box-shadow: 0 4px 12px rgba(34, 234, 170, 0.3);
+}
+
+/* Style de la liste des messages */
+.message-list {
+    background: transparent;
+    margin-top: 10px;
+    padding-bottom: 80px; /* Espace pour le bouton de capture */
+}
+
+ion-item {
+    --background: rgba(255, 255, 255, 0.9);
+    --border-radius: 12px;
+    margin-bottom: 12px;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-left: 16px;
+    margin-right: 16px;
+}
+
+/* Bouton de capture */
+.capture-button {
+    --background: var(--secondary-color);
+    --background-activated: #1cd89b;
+    width: 70px;
+    height: 70px;
+    --border-radius: 50%;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
+}
+
+/* Contrôles de caméra */
+.camera-controls {
+    position: absolute;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+    padding-top: 12px;
+}
+
+.control-button {
+    --color: var(--text-light);
+    --background: transparent;
+    --background-activated: rgba(255, 255, 255, 0.1);
+    --border-radius: 50%;
+}
+
+/* Toast personnalisé */
+.custom-toast {
+    --border-radius: 12px;
+    --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    font-family: var(--font-family);
+    font-weight: 500;
+    --width: auto;
+    --max-width: 80%;
+}
+
+/* Animations */
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in-down {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fix pour le safe area sur iOS */
+.ios .safe-area-container {
+    padding-top: max(env(safe-area-inset-top), 20px);
+}

@@ -1,85 +1,159 @@
+/* Login.css - Appliqué selon la charte graphique Snapshoot */
+
 .auth-form {
-  --background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --background: linear-gradient(120deg, #8c52ff 0%, #22eaaa 100%);
 }
 
 .logo-container {
-  text-align: center;
-  padding-top: 60px;
-  padding-bottom: 30px;
+    text-align: center;
+    padding-top: 80px;
+    padding-bottom: 40px;
 }
 
 .app-logo {
-  width: 100px;
-  height: 100px;
-  margin-bottom: 10px;
-  filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.2));
+    width: 120px;
+    height: 120px;
+    margin-bottom: 15px;
+    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.25));
 }
 
 .logo-container h1 {
-  margin: 0;
-  color: #333;
-  font-size: 28px;
-  font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 700;
+    font-family: "Montserrat", sans-serif;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .form-container {
-  padding: 0 20px;
-  max-width: 500px;
-  margin: 0 auto;
+    padding: 0 24px;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
-.form-container ion-card {
-  border-radius: 15px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+.auth-card {
+    border-radius: 16px !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    overflow: hidden;
 }
 
 .form-container ion-card-header {
-  padding-bottom: 10px;
+    padding-bottom: 8px;
+    padding-top: 20px;
 }
 
 .form-container ion-card-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #4080ff;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2d3047;
+    font-family: "Montserrat", sans-serif;
 }
 
 .form-container ion-card-content {
-  padding-top: 0;
+    padding-top: 8px;
+    padding-bottom: 24px;
 }
 
-.form-container ion-item {
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  --padding-bottom: 10px;
-  --background: transparent;
+.custom-input {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    --padding-bottom: 12px;
+    --background: transparent;
+    margin-bottom: 8px;
+    --border-color: #e0e0e0;
 }
 
-.form-container ion-item.item-has-focus {
-  --highlight-background: #4080ff;
+.custom-input.item-has-focus {
+    --highlight-background: #8c52ff;
 }
 
-.form-container ion-button[type="submit"] {
-  --background: #4080ff;
-  --background-activated: #3870e0;
-  --border-radius: 10px;
-  margin-top: 20px;
-  height: 48px;
-  font-weight: 600;
-  font-size: 16px;
+ion-input {
+    --padding-start: 12px;
+    --placeholder-color: #aaaaaa;
+    --placeholder-opacity: 0.8;
+    font-family: "Montserrat", sans-serif;
+    font-size: 16px;
+}
+
+ion-label {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 500;
+    color: #2d3047 !important;
+}
+
+.login-button {
+    --background: #22eaaa;
+    --background-activated: #1cd89b;
+    --border-radius: 12px;
+    margin-top: 24px;
+    height: 52px;
+    font-weight: 600;
+    font-size: 16px;
+    font-family: "Montserrat", sans-serif;
+    --box-shadow: 0 4px 12px rgba(34, 234, 170, 0.3);
+}
+
+.login-button:hover {
+    --background: #1cd89b;
+}
+
+.forgot-password {
+    --color: #8c52ff;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: "Montserrat", sans-serif;
+    margin-top: 8px;
 }
 
 .toggle-mode {
-  text-align: center;
-  margin-top: 20px;
+    text-align: center;
+    margin-top: 24px;
+    margin-bottom: 40px;
 }
 
-.toggle-mode ion-button {
-  --color: #4080ff;
-  font-size: 14px;
+.toggle-button {
+    --color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: "Montserrat", sans-serif;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-ion-text {
-  display: block;
-  padding-left: 16px;
-  margin-top: 4px;
+.error-message {
+    display: block;
+    padding-left: 16px;
+    margin-top: 4px;
+    font-family: "Montserrat", sans-serif;
+    font-size: 12px;
+}
+
+/* Animation d'apparition du formulaire */
+.auth-card {
+    animation: fade-in-up 0.5s ease-out forwards;
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Style pour le toast */
+ion-toast {
+    --border-radius: 12px;
+    --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    font-family: "Montserrat", sans-serif;
+    font-weight: 500;
+}
+
+/* Style pour le spinner de chargement */
+ion-spinner {
+    --color: #ffffff;
 }

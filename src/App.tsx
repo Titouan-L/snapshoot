@@ -1,9 +1,10 @@
-import { Redirect, Route } from 'react-router-dom';
+import React from 'react';
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
+import { Route, Redirect } from 'react-router-dom';
+import { AuthProvider } from './hooks/useAuth';
 import Login from './pages/Login';
 import TabsContainer from './components/TabsContainer';
-import { AuthProvider } from './hooks/useAuth';
 import PrivateRoute from './components/PrivateRoute';
 
 /* Core CSS required for Ionic components to work properly */
@@ -22,17 +23,6 @@ import '@ionic/react/css/text-transformation.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
-
-/* import '@ionic/react/css/palettes/dark.always.css'; */
-/* import '@ionic/react/css/palettes/dark.class.css'; */
-import '@ionic/react/css/palettes/dark.system.css';
-
 /* Theme variables */
 import './theme/variables.css';
 
@@ -40,22 +30,17 @@ setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
-    <AuthProvider>
-      <IonReactRouter>
+    <IonReactRouter>
+      <AuthProvider>
         <IonRouterOutlet>
-          <Route path="/login" exact={true}>
-            <Login />
-          </Route>
+          <Route path="/login" component={Login} exact={true} />
           <PrivateRoute path="/tabs" component={TabsContainer} />
-          <Route path="/" exact={true}>
-            <Redirect to="/tabs" />
-          </Route>
-          <Route>
-            <Redirect to="/tabs" />
+          <Route exact path="/">
+            <Redirect to="/tabs/camera" />
           </Route>
         </IonRouterOutlet>
-      </IonReactRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </IonReactRouter>
   </IonApp>
 );
 

@@ -19,8 +19,8 @@ import {
   IonToast,
   useIonLoading
 } from '@ionic/react';
-import { camera, cloudUpload, pencil, save, close, logOut } from 'ionicons/icons';
-import { useAuth } from '../hooks/useAuth';
+import { camera, save, close, logOut, trash } from 'ionicons/icons';
+import { useAuth } from '../../hooks/useAuth';
 import './ProfilePage.css';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
@@ -71,7 +71,11 @@ const ProfilePage: React.FC = () => {
 
   // Fonction pour enregistrer les modifications
   const saveProfile = async () => {
-    await present({ message: 'Enregistrement...' });
+    await present({ 
+      message: 'Enregistrement...',
+      spinner: 'crescent',
+      cssClass: 'custom-loading'
+    });
 
     try {
       // En production, ceci ferait un appel API pour mettre à jour le profil
@@ -116,10 +120,10 @@ const ProfilePage: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Mon Compte</IonTitle>
+          <IonTitle>Mon Profil</IonTitle>
           {!editMode ? (
             <IonButton slot="end" fill="clear" onClick={() => setEditMode(true)}>
-              <IonIcon slot="icon-only" icon={pencil} />
+              <IonIcon slot="icon-only" icon={camera} />
             </IonButton>
           ) : (
             <IonButton slot="end" fill="clear" onClick={cancelEdit}>
@@ -159,6 +163,7 @@ const ProfilePage: React.FC = () => {
                   onIonChange={e => setUsername(e.detail.value!)}
                   disabled={!editMode}
                   className={editMode ? 'editable' : ''}
+                  placeholder="Entrez votre nom d'utilisateur"
                 />
               </IonItem>
 
@@ -170,6 +175,7 @@ const ProfilePage: React.FC = () => {
                   onIonChange={e => setEmail(e.detail.value!)}
                   disabled={!editMode}
                   className={editMode ? 'editable' : ''}
+                  placeholder="Entrez votre email"
                 />
               </IonItem>
             </IonList>
@@ -210,12 +216,20 @@ const ProfilePage: React.FC = () => {
 
             <IonButton
               expand="block"
-              color="danger"
               className="logout-button"
               onClick={() => setShowLogoutAlert(true)}
             >
               <IonIcon slot="start" icon={logOut} />
               Se déconnecter
+            </IonButton>
+
+            <IonButton
+              expand="block"
+              fill="outline"
+              className="delete-account-button"
+            >
+              <IonIcon slot="start" icon={trash} />
+              Supprimer mon compte
             </IonButton>
           </div>
         </div>
@@ -226,14 +240,17 @@ const ProfilePage: React.FC = () => {
           onDidDismiss={() => setShowLogoutAlert(false)}
           header="Se déconnecter"
           message="Êtes-vous sûr de vouloir vous déconnecter ?"
+          cssClass="custom-alert"
           buttons={[
             {
               text: 'Annuler',
-              role: 'cancel'
+              role: 'cancel',
+              cssClass: 'alert-button-cancel'
             },
             {
               text: 'Déconnecter',
-              handler: handleLogout
+              handler: handleLogout,
+              cssClass: 'alert-button-confirm'
             }
           ]}
         />
@@ -245,6 +262,8 @@ const ProfilePage: React.FC = () => {
           message={toastMessage}
           duration={2000}
           position="bottom"
+          cssClass="custom-toast"
+          color="success"
         />
       </IonContent>
     </IonPage>

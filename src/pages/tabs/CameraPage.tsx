@@ -13,8 +13,8 @@ import {
 } from '@ionic/react';
 import { camera, videocam, image, send, close, stopCircle, sync } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { useAuth } from '../hooks/useAuth';
-import LogoutButton from '../components/LogoutButton';
+import { useAuth } from '../../hooks/useAuth';
+import LogoutButton from '../../components/LogoutButton';
 import './CameraPage.css';
 
 const CameraPage: React.FC = () => {

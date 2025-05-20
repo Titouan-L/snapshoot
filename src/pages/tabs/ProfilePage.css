@@ -1,0 +1,252 @@
+/* ProfilePage.css */
+
+/* Variables de la charte graphique */
+:root {
+  --primary-color: #8C52FF;
+  --secondary-color: #22EAAA;
+  --accent-color: #FF5757;
+  --neutral-light: #F8F9FC;
+  --neutral-dark: #2D3047;
+  --success-color: #4CD964;
+  --error-color: #FF3B30;
+  --warning-color: #FFCC00;
+  --info-color: #5AC8FA;
+}
+
+/* Base du conteneur de profil */
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Section supérieure: 25% de l'écran, couleur primaire */
+.profile-header {
+  background: var(--primary-color);
+  color: white;
+  padding: 30px 20px;
+  text-align: center;
+  position: relative;
+  height: 25vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Conteneur de la photo de profil */
+.profile-photo-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 10px;
+  z-index: 2;
+}
+
+/* Avatar de profil: diamètre 100px, bordure blanche 3px */
+.profile-avatar {
+  width: 100px !important;
+  height: 100px !important;
+  margin: 0 auto;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Bouton de changement de photo */
+.change-photo-button {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --border-radius: 50%;
+  --background: var(--secondary-color);
+  --color: white;
+  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 3;
+}
+
+.change-photo-button:active {
+  transform: scale(0.98);
+}
+
+/* Nom de profil */
+.profile-name {
+  margin: 10px 0 5px 0;
+  font-size: 24px;
+  font-weight: 700; /* Montserrat Bold */
+  color: white;
+}
+
+/* Email de profil */
+.profile-email {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 16px;
+  font-weight: 400; /* Montserrat Regular */
+}
+
+/* Section inférieure: 75% de l'écran, couleur neutre claire */
+.profile-content {
+  padding: 20px;
+  flex: 1;
+  background-color: var(--neutral-light);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  margin-top: -20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Formulaire de profil */
+.profile-form {
+  margin-bottom: 24px;
+  background: transparent;
+}
+
+/* Éléments de formulaire */
+.profile-form ion-item {
+  --padding-start: 0;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  --background: white;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+  --border-color: transparent;
+  overflow: hidden;
+}
+
+/* Labels du formulaire */
+.profile-form ion-label {
+  font-weight: 600; /* Montserrat SemiBold */
+  color: var(--neutral-dark);
+  font-size: 16px;
+}
+
+/* Inputs du formulaire */
+.profile-form ion-input {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400; /* Montserrat Regular */
+  color: var(--neutral-dark);
+  --placeholder-color: #AAAAAA;
+  --placeholder-opacity: 1;
+}
+
+/* Style input en mode édition */
+.profile-form ion-input.editable {
+  --background: rgba(140, 82, 255, 0.05);
+  --border-color: var(--primary-color);
+  --border-width: 1.5px;
+}
+
+/* Bouton de sauvegarde */
+.save-button {
+  margin: 24px 0;
+  --border-radius: 12px;
+  --background: var(--primary-color);
+  font-weight: 600; /* Montserrat SemiBold */
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --padding-start: 24px;
+  --padding-end: 24px;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  height: 48px;
+  text-transform: none;
+}
+
+.save-button:active {
+  transform: scale(0.98);
+}
+
+/* Section statistiques */
+.stats-item {
+  text-align: center;
+  padding: 16px 0;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.stats-item:active {
+  transform: scale(0.98);
+}
+
+/* Nombre des statistiques */
+.stats-number {
+  font-size: 24px;
+  font-weight: 700; /* Montserrat Bold */
+  color: var(--primary-color);
+}
+
+/* Label des statistiques */
+.stats-label {
+  font-size: 14px;
+  font-weight: 500; /* Montserrat Medium */
+  color: var(--neutral-dark);
+  margin-top: 4px;
+}
+
+/* Bouton de déconnexion */
+.logout-button {
+  margin-top: 30px;
+  --border-radius: 12px;
+  font-weight: 600; /* Montserrat SemiBold */
+  --background: var(--primary-color);
+  height: 48px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  text-transform: none;
+}
+
+/* Version alternative du bouton de déconnexion pour respecter la charte */
+.delete-account-button {
+  margin-top: 16px;
+  --border-radius: 12px;
+  font-weight: 600; /* Montserrat SemiBold */
+  --background: transparent;
+  --color: var(--error-color);
+  border: 1.5px solid var(--error-color);
+  height: 48px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  text-transform: none;
+}
+
+/* Personnalisation des éléments Ionic */
+ion-toolbar {
+  --background: var(--primary-color);
+  --color: white;
+}
+
+ion-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600; /* Montserrat SemiBold */
+  font-size: 18px;
+}
+
+ion-button[fill="clear"] {
+  --color: white;
+}
+
+ion-button ion-icon {
+  font-size: 20px;
+}
+
+/* Alertes et toasts personnalisés */
+.custom-alert .alert-wrapper {
+  border-radius: 16px;
+}
+
+.custom-toast {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500; /* Montserrat Medium */
+  --border-radius: 8px;
+}
