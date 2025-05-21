@@ -32,7 +32,8 @@ const Login: React.FC = () => {
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastMessage, setToastMessage] = useState<string>("");
     const [showPassword, setShowPassword] = useState<boolean>(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+    const [showConfirmPassword, setShowConfirmPassword] =
+        useState<boolean>(false);
 
     // Login form state
     const [loginEmail, setLoginEmail] = useState<string>("");
@@ -170,44 +171,44 @@ const Login: React.FC = () => {
     };
 
     const handleLogin = async (): Promise<void> => {
-    // Valider le formulaire de connexion
-    if (!validateLoginForm()) return;
+        // Valider le formulaire de connexion
+        //if (!validateLoginForm()) return;
 
-    try {
-        // Afficher un indicateur de chargement
-        await present({
-            message: "Connexion en cours...",
-            spinner: "circles",
-            cssClass: "loading-spinner"
-        });
+        try {
+            // Afficher un indicateur de chargement
+            await present({
+                message: "Connexion en cours...",
+                spinner: "circles",
+                cssClass: "loading-spinner",
+            });
 
-        /*
-        // Préparer les en-têtes et le corps de la requête
-        const myHeaders = new Headers();
-        myHeaders.append("Content-Type", "application/json");
-        myHeaders.append("X-API-Key", "{{token}}");
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            myHeaders.append("X-API-Key", "{{token}}");
 
-        const raw = JSON.stringify({
-            email: loginEmail,
-            password: loginPassword,
-        });
+            const raw = JSON.stringify({
+                email: "alexio@gmail.com",
+                password: "Alexandre#I0",
+            });
 
-        const requestOptions = {
-            method: "POST",
-            headers: myHeaders,
-            body: raw,
-            redirect: "follow"
-        };
+            const requestOptions = {
+                method: "POST",
+                headers: myHeaders,
+                body: raw,
+                redirect: "follow",
+            };
 
-        // Faire l'appel API
-        const response = await fetch("http://localhost/api/auth/login", requestOptions);
-        const result = await response.text();
-        console.log("result :" + result); // Vérifier la réponse dans la console
+            try {
+                const response = await fetch(
+                    "http://localhost/api/auth/login",
+                    requestOptions
+                );
+                const result = await response.text();
+                console.log("result : " + result);
+            } catch (error) {
+                console.error(error);
+            }
 
-        // Vérifier si le token est présent dans la réponse
-        if (result.token) {
-            console.log("Token reçu:", result.token);
-        */
             // Appeler la fonction de connexion
             await login(loginEmail, loginPassword);
 
@@ -216,34 +217,57 @@ const Login: React.FC = () => {
 
             // Rediriger vers la page de la caméra après la connexion
             router.push("/tabs/camera", "forward", "push");
-            /*
-        } else {
-            throw new Error("Token non reçu");
-        }*/
-        
-    } catch (error) {
-        // Masquer l'indicateur de chargement en cas d'erreur
-        await dismiss();
+        } catch (error) {
+            // Masquer l'indicateur de chargement en cas d'erreur
+            await dismiss();
 
-        // Afficher un message d'erreur
-        setToastMessage("Email ou mot de passe incorrect");
-        setShowToast(true);
+            // Afficher un message d'erreur
+            setToastMessage("Email ou mot de passe incorrect");
+            setShowToast(true);
 
-        // Log l'erreur pour le débogage
-        console.error("Erreur de connexion:", error);
-    }
-};
-
+            // Log l'erreur pour le débogage
+            console.error("Erreur de connexion:", error);
+        }
+    };
 
     const handleRegister = async (): Promise<void> => {
-        if (!validateRegisterForm()) return;
+        //if (!validateRegisterForm()) return;
 
         try {
             await present({
                 message: "Création du compte...",
                 spinner: "circles",
-                cssClass: "loading-spinner"
+                cssClass: "loading-spinner",
             });
+
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            myHeaders.append("X-API-Key", "{{token}}");
+
+            const raw = JSON.stringify({
+                username: "alexHess",
+                email: "alexio@gmail.com",
+                password: "Alexandre#I0",
+            });
+
+            const requestOptions = {
+                method: "POST",
+                headers: myHeaders,
+                body: raw,
+                redirect: "follow",
+            };
+
+            try {
+                const response = await fetch(
+                    "http://localhost/api/auth/register",
+                    requestOptions
+                );
+                const result = await response.text();
+                console.log("result : " + result);
+            } catch (error) {
+                console.error(error);
+            }
+
             await register(username, registerEmail, registerPassword);
             await dismiss();
             setToastMessage("Votre compte a été créé avec succès!");
@@ -300,7 +324,11 @@ const Login: React.FC = () => {
 
                             <IonCardContent>
                                 <IonItem className="custom-input">
-                                    <IonIcon icon={mail} slot="start" color="medium" />
+                                    <IonIcon
+                                        icon={mail}
+                                        slot="start"
+                                        color="medium"
+                                    />
                                     <IonLabel position="floating">
                                         Email
                                     </IonLabel>
@@ -323,24 +351,32 @@ const Login: React.FC = () => {
                                 )}
 
                                 <IonItem className="ion-margin-top custom-input">
-                                    <IonIcon icon={lockClosed} slot="start" color="medium" />
+                                    <IonIcon
+                                        icon={lockClosed}
+                                        slot="start"
+                                        color="medium"
+                                    />
                                     <IonLabel position="floating">
                                         Mot de passe
                                     </IonLabel>
                                     <IonInput
-                                        type={showPassword ? "text" : "password"}
+                                        type={
+                                            showPassword ? "text" : "password"
+                                        }
                                         value={loginPassword}
                                         onIonChange={(e) =>
                                             setLoginPassword(e.detail.value!)
                                         }
                                         clearInput
                                     />
-                                    <IonIcon 
-                                        icon={showPassword ? eyeOff : eye} 
-                                        slot="end" 
-                                        color="medium" 
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        style={{ cursor: 'pointer' }}
+                                    <IonIcon
+                                        icon={showPassword ? eyeOff : eye}
+                                        slot="end"
+                                        color="medium"
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                        style={{ cursor: "pointer" }}
                                     />
                                 </IonItem>
                                 {loginPasswordError && (
@@ -378,7 +414,11 @@ const Login: React.FC = () => {
 
                             <IonCardContent>
                                 <IonItem className="custom-input">
-                                    <IonIcon icon={person} slot="start" color="medium" />
+                                    <IonIcon
+                                        icon={person}
+                                        slot="start"
+                                        color="medium"
+                                    />
                                     <IonLabel position="floating">
                                         Nom d'utilisateur
                                     </IonLabel>
@@ -401,7 +441,11 @@ const Login: React.FC = () => {
                                 )}
 
                                 <IonItem className="ion-margin-top custom-input">
-                                    <IonIcon icon={mail} slot="start" color="medium" />
+                                    <IonIcon
+                                        icon={mail}
+                                        slot="start"
+                                        color="medium"
+                                    />
                                     <IonLabel position="floating">
                                         Email
                                     </IonLabel>
@@ -424,24 +468,32 @@ const Login: React.FC = () => {
                                 )}
 
                                 <IonItem className="ion-margin-top custom-input">
-                                    <IonIcon icon={lockClosed} slot="start" color="medium" />
+                                    <IonIcon
+                                        icon={lockClosed}
+                                        slot="start"
+                                        color="medium"
+                                    />
                                     <IonLabel position="floating">
                                         Mot de passe
                                     </IonLabel>
                                     <IonInput
-                                        type={showPassword ? "text" : "password"}
+                                        type={
+                                            showPassword ? "text" : "password"
+                                        }
                                         value={registerPassword}
                                         onIonChange={(e) =>
                                             setRegisterPassword(e.detail.value!)
                                         }
                                         clearInput
                                     />
-                                    <IonIcon 
-                                        icon={showPassword ? eyeOff : eye} 
-                                        slot="end" 
-                                        color="medium" 
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        style={{ cursor: 'pointer' }}
+                                    <IonIcon
+                                        icon={showPassword ? eyeOff : eye}
+                                        slot="end"
+                                        color="medium"
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                        style={{ cursor: "pointer" }}
                                     />
                                 </IonItem>
                                 {registerPasswordError && (
@@ -454,24 +506,38 @@ const Login: React.FC = () => {
                                 )}
 
                                 <IonItem className="ion-margin-top custom-input">
-                                    <IonIcon icon={lockClosed} slot="start" color="medium" />
+                                    <IonIcon
+                                        icon={lockClosed}
+                                        slot="start"
+                                        color="medium"
+                                    />
                                     <IonLabel position="floating">
                                         Confirmer le mot de passe
                                     </IonLabel>
                                     <IonInput
-                                        type={showConfirmPassword ? "text" : "password"}
+                                        type={
+                                            showConfirmPassword
+                                                ? "text"
+                                                : "password"
+                                        }
                                         value={confirmPassword}
                                         onIonChange={(e) =>
                                             setConfirmPassword(e.detail.value!)
                                         }
                                         clearInput
                                     />
-                                    <IonIcon 
-                                        icon={showConfirmPassword ? eyeOff : eye} 
-                                        slot="end" 
-                                        color="medium" 
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        style={{ cursor: 'pointer' }}
+                                    <IonIcon
+                                        icon={
+                                            showConfirmPassword ? eyeOff : eye
+                                        }
+                                        slot="end"
+                                        color="medium"
+                                        onClick={() =>
+                                            setShowConfirmPassword(
+                                                !showConfirmPassword
+                                            )
+                                        }
+                                        style={{ cursor: "pointer" }}
                                     />
                                 </IonItem>
                                 {confirmPasswordError && (

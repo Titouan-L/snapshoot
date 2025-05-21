@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import {
     IonSearchbar,
     IonList,
-    IonItem,
     IonAvatar,
     IonLabel,
     IonButton,
@@ -13,6 +12,7 @@ import {
     IonIcon,
 } from "@ionic/react";
 import { sendOutline, ellipse } from "ionicons/icons";
+import { useIonRouter } from "@ionic/react";
 
 // Mock data
 const mockFriends = [
@@ -23,6 +23,7 @@ const mockFriends = [
 
 const Friends: React.FC = () => {
     const [search, setSearch] = useState("");
+    const router = useIonRouter();
 
     const filteredFriends = mockFriends.filter((f) =>
         f.username.toLowerCase().includes(search.toLowerCase())
@@ -80,7 +81,13 @@ const Friends: React.FC = () => {
                                 size="small"
                                 fill="outline"
                                 style={{ marginLeft: "auto" }}
-                                // onClick={() => ...}
+                                onClick={() =>
+                                    router.push(
+                                        `/tabs/social/private/${friend.id}`,
+                                        'forward',
+                                        'push'
+                                    )
+                                }
                             >
                                 <IonIcon icon={sendOutline} slot="icon-only" />
                             </IonButton>

@@ -15,12 +15,28 @@ const CameraPage = lazy(() => import("../pages/tabs/CameraPage"));
 //const ViewMessage = lazy(() => import("../pages/tabs/ViewMessage"));
 const ProfilePage = lazy(() => import("../pages/tabs/ProfilePage"));
 const SocialPage = lazy(() => import("../pages/tabs/SocialPage"));
+const GroupConversation = lazy(
+    () => import("../pages/tabs/socialPages/GroupConversation")
+);
+const PrivateConversation = lazy(
+    () => import("../pages/tabs/socialPages/PrivateConversation")
+);
 
 const TabsContainer: React.FC = () => {
     return (
         <IonTabs>
             <IonRouterOutlet>
                 <Route path="/tabs/camera" component={CameraPage} exact />
+                <Route
+                    path="/tabs/social/group/:id"
+                    component={GroupConversation}
+                    exact
+                />
+                <Route
+                    path="/tabs/social/private/:id"
+                    component={PrivateConversation}
+                    exact
+                />
                 <Route path="/tabs/social" component={SocialPage} />
                 <Route path="/tabs/profile" component={ProfilePage} exact />
                 <Redirect exact from="/tabs" to="/tabs/camera" />
