@@ -14,11 +14,11 @@ import {
 import { sendOutline, ellipse } from "ionicons/icons";
 import { useIonRouter } from "@ionic/react";
 
-// Mock data
+// Mock data - conservé tel quel
 const mockFriends = [
-    { id: "1", username: "Alice", avatar: "", online: true },
-    { id: "2", username: "Bob", avatar: "", online: false },
-    { id: "3", username: "Charlie", avatar: "", online: true },
+    { id: "1", username: "Alice", profilePicture: "", userStatus: "ONLINE" },
+    { id: "2", username: "Bob", profilePicture: "", userStatus: "OFFLINE" },
+    { id: "3", username: "Charlie", profilePicture: "", userStatus: "ONLINE" },
 ];
 
 const Friends: React.FC = () => {
@@ -28,6 +28,18 @@ const Friends: React.FC = () => {
     const filteredFriends = mockFriends.filter((f) =>
         f.username.toLowerCase().includes(search.toLowerCase())
     );
+
+    // Fonction pour naviguer vers la conversation avec l'ami sélectionné
+    const navigateToConversation = (friendId: string, friendUsername: string) => {
+        // Passage à la fois de l'ID dans l'URL et du nom en state
+        router.push({
+            pathname: `/tabs/social/private/${friendId}`,
+            state: { 
+                friendId: friendId,
+                friendUsername: friendUsername
+            }
+        });
+    };
 
     return (
         <>
@@ -39,7 +51,11 @@ const Friends: React.FC = () => {
             <div style={{ height: 1, background: "#ccc", margin: "8px 0" }} />
             <IonList>
                 {filteredFriends.map((friend) => (
-                    <IonCard key={friend.id} className="friend-card">
+                    <IonCard 
+                        key={friend.id} 
+                        className="friend-card"
+                        onClick={() => navigateToConversation(friend.id, friend.username)}
+                    >
                         <IonCardContent
                             style={{ display: "flex", alignItems: "center" }}
                         >
@@ -47,7 +63,7 @@ const Friends: React.FC = () => {
                                 <IonAvatar>
                                     <img
                                         src={
-                                            friend.avatar ||
+                                            friend.profilePicture ||
                                             "https://ui-avatars.com/api/?name=" +
                                                 friend.username
                                         }
@@ -56,7 +72,7 @@ const Friends: React.FC = () => {
                                 </IonAvatar>
                                 {/* Pastille de statut */}
                                 <IonBadge
-                                    color={friend.online ? "success" : "medium"}
+                                    color={friend.userStatus == "ONLINE" ? "success" : "medium"}
                                     style={{
                                         position: "absolute",
                                         bottom: 0,
@@ -81,13 +97,10 @@ const Friends: React.FC = () => {
                                 size="small"
                                 fill="outline"
                                 style={{ marginLeft: "auto" }}
-                                onClick={() =>
-                                    router.push(
-                                        `/tabs/social/private/${friend.id}`,
-                                        'forward',
-                                        'push'
-                                    )
-                                }
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Empêche le déclenchement du onClick de la carte
+                                    navigateToConversation(friend.id, friend.username);
+                                }}
                             >
                                 <IonIcon icon={sendOutline} slot="icon-only" />
                             </IonButton>

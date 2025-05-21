@@ -1,28 +1,37 @@
+// components/PrivateRoute.tsx
 import React from "react";
-import { Redirect, Route, RouteProps } from "react-router-dom";
+import { Route, Redirect, RouteProps } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { IonLoading } from "@ionic/react";
 
 interface PrivateRouteProps extends RouteProps {
-    component: React.ComponentType<any>;
+    children: React.ReactNode;
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({
-    component: Component,
-    ...rest
-}) => {
-    const { isAuthenticated } = useAuth();
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, ...rest }) => {
+    const { isAuthenticated, loading } = useAuth();
+
+    // Afficher un indicateur de chargement pendant la vérification de l'authentification
+    if (loading) {
+        return (
+            <IonLoading
+                isOpen={true}
+                message="Vérification de l'authentification..."
+            />
+        );
+    }
 
     return (
         <Route
             {...rest}
-            render={(props) =>
+            render={({ location }) =>
                 isAuthenticated ? (
-                    <Component {...props} />
+                    children
                 ) : (
                     <Redirect
                         to={{
                             pathname: "/login",
-                            state: { from: props.location },
+                            state: { from: location },
                         }}
                     />
                 )

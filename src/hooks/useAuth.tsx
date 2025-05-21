@@ -3,7 +3,6 @@ import { Preferences } from "@capacitor/preferences";
 
 // Définition des types
 export interface User {
-    id: string;
     email: string;
     username: string;
     profilePicture?: string | null;
@@ -70,35 +69,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         loadStoredUser();
     }, []);
 
-    // Fonction de simulation de connexion (à remplacer par un appel API réel en production)
+    // Fonction de connexion (à remplacer par un appel API réel en production)
     const login = async (email: string, password: string): Promise<User> => {
         setIsLoading(true);
         return new Promise<User>((resolve, reject) => {
+            // Ici, vous feriez normalement un appel API à votre backend
             setTimeout(async () => {
                 try {
-                    // Simuler une connexion réussie
+                    // Simuler une vérification d'authentification (à remplacer par votre API)
+                    // Dans un vrai cas d'utilisation, vous récupéreriez ces données depuis votre API
+
+                    // Créer un objet utilisateur avec les données du formulaire
                     const user: User = {
-                        id: "123456",
-                        email,
-                        username: email.split("@")[0],
+                        email: email,
+                        username: email.split("@")[0], // Par défaut, utilisez la partie locale de l'email comme nom d'utilisateur
+                        profilePicture: null, // Pas d'image de profil par défaut
                     };
 
-                    const token = "mock-jwt-token";
+                    // Générer un token (à remplacer par le token JWT de votre API)
+                    const token = `auth-token-${Date.now()}`;
 
-                    // Stocker les données de l'utilisateur et le token
+                    // Stocker les données de l'utilisateur dans les préférences
                     await Preferences.set({
                         key: "currentUser",
                         value: JSON.stringify(user),
                     });
 
+                    // Stocker le token d'authentification
                     await Preferences.set({
                         key: "authToken",
                         value: token,
                     });
 
+                    // Stocker d'autres informations qui pourraient être utiles
+                    await Preferences.set({
+                        key: "lastLogin",
+                        value: new Date().toISOString(),
+                    });
+
+                    // Mettre à jour l'état de l'application
                     setCurrentUser(user);
                     setIsLoading(false);
-                    // On ne manipule plus le router directement ici
+
+                    console.log("Utilisateur connecté et stocké:", user);
                     resolve(user);
                 } catch (error) {
                     setIsLoading(false);
@@ -113,7 +126,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
     };
 
-    // Fonction de simulation d'inscription (à remplacer par un appel API réel en production)
+    // Fonction d'inscription (à remplacer par un appel API réel en production)
     const register = async (
         username: string,
         email: string,
@@ -121,19 +134,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     ): Promise<User> => {
         setIsLoading(true);
         return new Promise<User>((resolve, reject) => {
-            setTimeout(() => {
+            setTimeout(async () => {
                 try {
-                    // Simuler une inscription réussie
-                    const user: User = {
-                        id: "654321",
+                    // Créer un objet utilisateur complet avec les données du formulaire
+                    const newUser: User = {
+                        id: `user-${Date.now()}`, // Générer un ID unique (à remplacer par l'ID réel de votre API)
                         email,
                         username,
+                        profilePicture: null, // Pas d'image de profil par défaut
                     };
+
+                    // Générer un token (à remplacer par le token JWT de votre API)
+                    const token = `auth-token-${Date.now()}`;
+
+                    // Stocker l'objet utilisateur dans les préférences
+                    await Preferences.set({
+                        key: "currentUser",
+                        value: JSON.stringify(newUser),
+                    });
+
+                    // Stocker le token d'authentification
+                    await Preferences.set({
+                        key: "authToken",
+                        value: token,
+                    });
+
+                    // Stocker d'autres informations qui pourraient être utiles
+                    await Preferences.set({
+                        key: "registrationDate",
+                        value: new Date().toISOString(),
+                    });
+
+                    // Mettre à jour l'état de l'application
+                    setCurrentUser(newUser);
                     setIsLoading(false);
-                    resolve(user);
+
+                    console.log("Nouvel utilisateur créé et stocké:", newUser);
+                    resolve(newUser);
                 } catch (error) {
                     setIsLoading(false);
-                    reject(new Error("Erreur lors de l'inscription"));
+                    console.error("Erreur lors de l'inscription:", error);
+                    reject(
+                        new Error(
+                            "Erreur lors de l'inscription: " + error.message
+                        )
+                    );
                 }
             }, 1000); // Simuler un délai réseau
         });
