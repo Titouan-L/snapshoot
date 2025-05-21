@@ -52,6 +52,7 @@ const Login: React.FC = () => {
     const [confirmPasswordError, setConfirmPasswordError] =
         useState<string>("");
 
+
     useIonViewDidEnter(() => {
         if (isPlatform("capacitor")) {
             StatusBar.setStyle({ style: Style.Dark });
