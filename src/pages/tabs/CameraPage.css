@@ -4,39 +4,116 @@
   justify-content: center;
   align-items: center;
   background-color: #000;
+  --background: #000;
+  position: relative;
 }
 
-.welcome-container {
+/* Container de la vue caméra */
+.camera-view-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  overflow: hidden;
+}
+
+.camera-view-container.active {
+  display: block;
+}
+
+.camera-view {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Overlay de bienvenue avec fondu */
+.welcome-overlay {
   position: absolute;
   top: 20px;
   left: 0;
   right: 0;
   text-align: center;
   padding: 15px;
-  background-color: rgba(0, 0, 0, 0.5);
   color: white;
   z-index: 10;
+  animation: fadeOut 3s forwards;
 }
 
-.welcome-container h2 {
-  margin: 0 0 5px 0;
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.welcome-overlay h2 {
+  margin: 0;
   font-size: 18px;
   font-weight: 500;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
 }
 
-.welcome-container p {
-  margin: 0;
-  font-size: 14px;
-  opacity: 0.8;
+/* Écran de permission */
+.permission-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 20px;
+  text-align: center;
+  color: white;
 }
 
-.camera-actions {
+/* Écran de chargement */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: #000;
+  color: white;
+  z-index: 100;
+}
+
+.loading-container p {
+  margin-top: 15px;
+}
+
+/* Contrôles de caméra */
+.camera-controls {
   position: absolute;
-  bottom: 80px;
+  bottom: 20px;
   left: 0;
   right: 0;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 20;
+}
+
+.control-button {
+  width: 40px;
+  height: 40px;
+  display: flex;
   justify-content: center;
+  align-items: center;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.control-button ion-icon {
+  font-size: 22px;
+}
+
+.capture-buttons {
+  display: flex;
   gap: 20px;
 }
 
@@ -56,18 +133,7 @@
   --background: #ff4080;
 }
 
-.recording-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.video-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
+/* Timer d'enregistrement */
 .recording-timer {
   position: absolute;
   top: 20px;
@@ -77,24 +143,32 @@
   padding: 5px 10px;
   border-radius: 20px;
   font-weight: bold;
+  z-index: 30;
 }
 
+/* Actions pour l'enregistrement */
 .recording-actions {
   position: absolute;
-  bottom: 80px;
+  bottom: 30px;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
+  z-index: 20;
 }
 
+/* Prévisualisation des médias */
 .media-preview {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #000;
+  z-index: 15;
 }
 
 .media-preview img,
@@ -104,11 +178,43 @@
   object-fit: contain;
 }
 
+/* Actions pour les médias capturés */
 .media-actions {
   position: absolute;
-  bottom: 80px;
+  bottom: 30px;
   left: 0;
   right: 0;
   display: flex;
   justify-content: space-around;
+  z-index: 20;
+}
+
+/* Animations pour les boutons */
+.camera-button:active,
+.video-button:active {
+  transform: scale(0.95);
+  transition: transform 0.1s;
+}
+
+/* Effet de flash (optionnel) */
+.flash-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  opacity: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.flash-effect.active {
+  animation: flash 0.3s;
+}
+
+@keyframes flash {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
 }

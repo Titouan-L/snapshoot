@@ -9,10 +9,13 @@ import {
   IonButtons,
   IonHeader,
   IonTitle,
-  useIonActionSheet
+  useIonActionSheet,
+  useIonViewDidEnter,
+  useIonViewWillLeave,
+  IonSpinner
 } from '@ionic/react';
-import { camera, videocam, image, send, close, stopCircle, sync } from 'ionicons/icons';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { camera, videocam, image, send, close, stopCircle, sync, flashOutline, refreshOutline } from 'ionicons/icons';
+import { Camera, CameraResultType, CameraSource, CameraDirection } from '@capacitor/camera';
 import { useAuth } from '../../hooks/useAuth';
 import LogoutButton from '../../components/LogoutButton';
 import './CameraPage.css';
@@ -27,44 +30,154 @@ const CameraPage: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const [cameraActive, setCameraActive] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [cameraPermission, setCameraPermission] = useState<boolean>(false);
+  const [cameraDirection, setCameraDirection] = useState<CameraDirection>(CameraDirection.Front);
+  const [useFlash, setUseFlash] = useState<boolean>(false);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  // Fonction pour prendre une photo avec l'appareil photo
-  const takePhoto = async () => {
+  // Initialiser la caméra automatiquement au chargement de la page
+  useIonViewDidEnter(() => {
+    initializeCamera();
+  });
+
+  // Nettoyer les ressources lors de la sortie de la page
+  useIonViewWillLeave(() => {
+    stopCamera();
+  });
+
+  // Initialiser la caméra
+  const initializeCamera = async () => {
+    if (cameraActive) return; // Éviter de réinitialiser si déjà active
+
+    setIsLoading(true);
     try {
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera
+      // Vérifier et demander les permissions de caméra
+      const permissions = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: cameraDirection === CameraDirection.Front ? 'user' : 'environment'
+        },
+        audio: false
       });
 
-      setPhoto(image.dataUrl || null);
+      setCameraPermission(true);
+
+      // Stocker le stream pour pouvoir l'arrêter plus tard
+      streamRef.current = permissions;
+
+      // Afficher le flux vidéo
+      if (videoRef.current) {
+        videoRef.current.srcObject = permissions;
+        videoRef.current.play()
+          .then(() => {
+            setCameraActive(true);
+          })
+          .catch(err => {
+            console.error("Erreur lors de la lecture vidéo:", err);
+          });
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'initialisation de la caméra:', error);
+      setCameraPermission(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Arrêter la caméra
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    setCameraActive(false);
+  };
+
+  // Basculer entre la caméra frontale et arrière
+  const toggleCameraDirection = async () => {
+    setIsLoading(true);
+    stopCamera();
+
+    // Changer la direction de la caméra
+    setCameraDirection(prev =>
+      prev === CameraDirection.Front ? CameraDirection.Rear : CameraDirection.Front
+    );
+
+    // Petit délai pour s'assurer que les ressources sont libérées
+    setTimeout(() => {
+      initializeCamera();
+    }, 300);
+  };
+
+  // Fonction pour prendre une photo à partir du flux vidéo en direct
+  const takePhoto = async () => {
+    if (!videoRef.current || !cameraActive) return;
+
+    setIsLoading(true);
+    try {
+      // Créer un canvas pour capturer l'image du flux vidéo
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Si c'est la caméra frontale, on peut inverser l'image pour un effet miroir naturel
+        if (cameraDirection === CameraDirection.Front) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+        // Convertir en dataURL
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        setPhoto(dataUrl);
+
+        // Désactiver temporairement le flux de la caméra
+        setCameraActive(false);
+      }
     } catch (error) {
       console.error('Erreur lors de la prise de photo:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Fonction pour démarrer l'enregistrement vidéo
   const startVideoRecording = async () => {
+    if (!cameraActive || !videoRef.current || !streamRef.current) {
+      await initializeCamera();
+      // Petit délai pour s'assurer que la caméra est initialisée
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
     try {
-      // Demande l'accès à la caméra et au micro
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+      // Demander l'accès au micro (en plus de la caméra déjà active)
+      const audioStream = await navigator.mediaDevices.getUserMedia({
         audio: true
       });
 
-      // Affiche le flux vidéo dans l'élément vidéo
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
+      // Combiner les pistes audio et vidéo
+      const videoStream = streamRef.current;
+      if (!videoStream) return;
+
+      const combinedStream = new MediaStream();
+      videoStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
+      audioStream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
 
       // Initialiser le MediaRecorder
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(combinedStream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
-      // Enregistre les données vidéo
+      // Enregistrer les données vidéo
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
@@ -77,12 +190,14 @@ const CameraPage: React.FC = () => {
         const videoUrl = URL.createObjectURL(videoBlob);
         setPhoto(videoUrl);
 
-        // Arrête tous les tracks du stream
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
+        // Arrêter les pistes audio
+        audioStream.getTracks().forEach(track => track.stop());
+
+        // Désactiver l'enregistrement
+        setIsRecording(false);
       };
 
-      // Démarre l'enregistrement
+      // Démarrer l'enregistrement
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingTime(0);
@@ -100,7 +215,7 @@ const CameraPage: React.FC = () => {
       }, 1000);
 
     } catch (error) {
-      console.error('Erreur lors de l\'accès à la caméra:', error);
+      console.error('Erreur lors du démarrage de l\'enregistrement:', error);
     }
   };
 
@@ -113,7 +228,6 @@ const CameraPage: React.FC = () => {
 
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
     }
   };
 
@@ -128,15 +242,27 @@ const CameraPage: React.FC = () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
+
+      // Arrêter la caméra
+      stopCamera();
     };
   }, []);
 
-  // Fonction pour annuler/supprimer la photo ou vidéo
+  // Fonction pour annuler/supprimer la photo ou vidéo et revenir à la caméra
   const cancelMedia = () => {
     setPhoto(null);
     if (isRecording) {
       stopVideoRecording();
     }
+    // Réactiver la caméra
+    initializeCamera();
+  };
+
+  // Fonction pour basculer le flash (à implémenter selon les capacités du navigateur)
+  const toggleFlash = () => {
+    setUseFlash(prev => !prev);
+    // Note: L'implémentation réelle du flash dépend des capacités du navigateur
+    // et peut nécessiter l'utilisation d'une API spécifique ou d'un plugin Capacitor
   };
 
   // Fonction pour envoyer la photo ou vidéo
@@ -173,33 +299,46 @@ const CameraPage: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Snapshoot</IonTitle>
-          <IonButtons slot="end">
-            <LogoutButton />
-          </IonButtons>
-        </IonToolbar>
-      </IonHeader>
-
       <IonContent fullscreen className="camera-content">
-        {currentUser && !photo && !isRecording && (
-          <div className="welcome-container">
-            <h2>Bonjour {currentUser.username}</h2>
-            <p>Prenez une photo ou enregistrez une vidéo!</p>
+        {!cameraPermission && !isLoading && (
+          <div className="permission-container">
+            <h2>Autorisation requise</h2>
+            <p>Snapshoot a besoin d'accéder à votre caméra</p>
+            <IonButton expand="block" onClick={initializeCamera}>
+              Autoriser la caméra
+            </IonButton>
           </div>
         )}
 
-        {isRecording && (
-          <div className="recording-container">
-            <video ref={videoRef} className="video-preview" autoPlay muted />
-            <div className="recording-timer">
-              {recordingTime}s / 10s
+        {isLoading && (
+          <div className="loading-container">
+            <IonSpinner name="crescent" />
+            <p>Initialisation de la caméra...</p>
+          </div>
+        )}
+
+        {/* Affichage du flux vidéo de la caméra */}
+        <div className={`camera-view-container ${cameraActive ? 'active' : ''}`}>
+          <video
+            ref={videoRef}
+            className="camera-view"
+            autoPlay
+            playsInline
+            style={{
+              transform: cameraDirection === CameraDirection.Front ? 'scaleX(-1)' : 'none'
+            }}
+          />
+
+          {/* Overlay pour le message de bienvenue (bref) */}
+          {currentUser && cameraActive && (
+            <div className="welcome-overlay">
+              <h2>Bonjour {currentUser.username}</h2>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {photo && !isRecording && (
+        {/* Affichage de la photo ou vidéo capturée */}
+        {photo && (
           <div className="media-preview">
             {photo.startsWith('data:image') ? (
               <img src={photo} alt="Capture" />
@@ -209,17 +348,48 @@ const CameraPage: React.FC = () => {
           </div>
         )}
 
-        {!photo && !isRecording && (
-          <div className="camera-actions">
-            <IonButton className="camera-button" onClick={takePhoto}>
-              <IonIcon icon={camera} />
-            </IonButton>
-            <IonButton className="video-button" onClick={startVideoRecording}>
-              <IonIcon icon={videocam} />
-            </IonButton>
+        {/* Affichage du chronomètre d'enregistrement */}
+        {isRecording && (
+          <div className="recording-timer">
+            {recordingTime}s / 10s
           </div>
         )}
 
+        {/* Contrôles de caméra */}
+        {cameraActive && !photo && !isRecording && (
+          <div className="camera-controls">
+            <div className="control-button flash" onClick={toggleFlash}>
+              <IonIcon
+                icon={flashOutline}
+                color={useFlash ? "warning" : "light"}
+              />
+            </div>
+
+            <div className="capture-buttons">
+              <IonButton
+                className="camera-button"
+                onClick={takePhoto}
+                disabled={isLoading}
+              >
+                <IonIcon icon={camera} />
+              </IonButton>
+
+              <IonButton
+                className="video-button"
+                onClick={startVideoRecording}
+                disabled={isLoading}
+              >
+                <IonIcon icon={videocam} />
+              </IonButton>
+            </div>
+
+            <div className="control-button switch-camera" onClick={toggleCameraDirection}>
+              <IonIcon icon={refreshOutline} />
+            </div>
+          </div>
+        )}
+
+        {/* Contrôles pendant l'enregistrement */}
         {isRecording && (
           <div className="recording-actions">
             <IonButton color="danger" onClick={stopVideoRecording}>
@@ -228,9 +398,10 @@ const CameraPage: React.FC = () => {
           </div>
         )}
 
+        {/* Contrôles après capture */}
         {photo && !isRecording && (
           <div className="media-actions">
-            <IonButton color="danger" onClick={cancelMedia}>
+            <IonButton color="medium" onClick={cancelMedia}>
               <IonIcon icon={close} />
             </IonButton>
             <IonButton color="primary" onClick={sendMedia}>
