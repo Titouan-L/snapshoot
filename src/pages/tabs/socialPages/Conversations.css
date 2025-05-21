@@ -1,0 +1,35 @@
+.message-bubble {
+    background: #f4f4f4;
+    border-radius: 15px;
+    padding: 10px;
+    margin: 5px 0;
+}
+
+.message-sent .message-bubble {
+    background: #3880ff;
+    color: white;
+    margin-left: auto;
+    max-width: 70%;
+}
+
+.message-received .message-bubble {
+    background: #f4f4f4;
+    margin-right: auto;
+    max-width: 70%;
+}
+
+.message-time {
+    font-size: 0.8rem;
+    color: #666;
+    display: block;
+    margin-top: 4px;
+}
+
+.message-input-container {
+    display: flex;
+    padding: 10px;
+    align-items: center;
+    background: #fff;
+    position: sticky;
+    bottom: 0;
+}

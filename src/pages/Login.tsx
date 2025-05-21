@@ -181,7 +181,7 @@ const Login: React.FC = () => {
             cssClass: "loading-spinner"
         });
 
-
+        /*
         // Préparer les en-têtes et le corps de la requête
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
@@ -202,12 +202,12 @@ const Login: React.FC = () => {
         // Faire l'appel API
         const response = await fetch("http://localhost/api/auth/login", requestOptions);
         const result = await response.text();
-        console.log("result :" + result);
+        console.log("result :" + result); // Vérifier la réponse dans la console
 
         // Vérifier si le token est présent dans la réponse
         if (result.token) {
             console.log("Token reçu:", result.token);
-
+        */
             // Appeler la fonction de connexion
             await login(loginEmail, loginPassword);
 
@@ -216,10 +216,10 @@ const Login: React.FC = () => {
 
             // Rediriger vers la page de la caméra après la connexion
             router.push("/tabs/camera", "forward", "push");
-
+            /*
         } else {
             throw new Error("Token non reçu");
-        }
+        }*/
         
     } catch (error) {
         // Masquer l'indicateur de chargement en cas d'erreur
@@ -236,83 +236,28 @@ const Login: React.FC = () => {
 
 
     const handleRegister = async (): Promise<void> => {
-        // Valider le formulaire d'inscription
         if (!validateRegisterForm()) return;
 
         try {
-            // Afficher un indicateur de chargement
             await present({
                 message: "Création du compte...",
                 spinner: "circles",
                 cssClass: "loading-spinner"
             });
-
-            // Préparer les en-têtes et le corps de la requête
-            const myHeaders = new Headers();
-            myHeaders.append("Content-Type", "application/json");
-            myHeaders.append("X-API-Key", "{{token}}");
-
-            const raw = JSON.stringify({
-                username: username,
-                email: registerEmail,
-                password: registerPassword,
-            });
-
-            const requestOptions = {
-                method: "POST",
-                headers: myHeaders,
-                body: raw,
-                redirect: "follow"
-            };
-
-            // Faire l'appel API
-            const response = await fetch("http://localhost/api/auth/register", requestOptions);
-            const result = await response.text();
-            console.log("result :", result); // Vérifier la réponse dans la console
-
-            // Vérifier si l'inscription a réussi
-            if (response.ok) {
-                console.log("Inscription réussie");
-
-                // Appeler la fonction de register du context d'authentification
-                await register(username, registerEmail, registerPassword);
-
-                // Masquer l'indicateur de chargement
-                await dismiss();
-
-                // Afficher un message de succès
-                setToastMessage("Votre compte a été créé avec succès!");
-                setShowToast(true);
-
-                // Rediriger vers la page de connexion après un court délai
-                setTimeout(() => {
-                    setIsLoginMode(true);
-                }, 1500);
-            } else {
-                // Analyser la réponse d'erreur
-                let errorMsg = "Un problème est survenu lors de la création de votre compte";
-                try {
-                    const errorData = JSON.parse(result);
-                    if (errorData.message) {
-                        errorMsg = errorData.message;
-                    }
-                } catch (e) {
-                    // Si la réponse n'est pas un JSON valide, utiliser le message d'erreur par défaut
-                }
-
-                throw new Error(errorMsg);
-            }
-        } catch (error) {
-            // Masquer l'indicateur de chargement en cas d'erreur
+            await register(username, registerEmail, registerPassword);
             await dismiss();
-
-            // Afficher le message d'erreur
-            const errorMessage = error instanceof Error ? error.message : "Un problème est survenu lors de la création de votre compte";
-            setToastMessage(errorMessage);
+            setToastMessage("Votre compte a été créé avec succès!");
             setShowToast(true);
 
-            // Log l'erreur pour le débogage
-            console.error("Erreur d'inscription:", error);
+            setTimeout(() => {
+                setIsLoginMode(true);
+            }, 1500);
+        } catch (error) {
+            await dismiss();
+            setToastMessage(
+                "Un problème est survenu lors de la création de votre compte"
+            );
+            setShowToast(true);
         }
     };
 
