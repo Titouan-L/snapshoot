@@ -11,7 +11,9 @@ import {
   IonTitle,
   useIonActionSheet,
   useIonViewDidEnter,
+  useIonViewWillEnter,
   useIonViewWillLeave,
+  useIonViewDidLeave,
   IonSpinner,
   IonToast,
   IonFab,
@@ -67,21 +69,38 @@ const CameraPage: React.FC = () => {
   const [showFriendsList, setShowFriendsList] = useState<boolean>(false);
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
 
-  // Initialiser la caméra automatiquement au chargement de la page
-  useIonViewDidEnter(() => {
-    if (!photo && !showFriendsList) { // Ne pas initialiser si une photo est déjà affichée ou si on est sur la liste d'amis
+  // Référence pour suivre si le composant est monté
+  const isMounted = useRef<boolean>(true);
+
+  // Initialiser la caméra quand la vue est sur le point d'entrer
+  useIonViewWillEnter(() => {
+    isMounted.current = true;
+    if (!photo && !showFriendsList) {
       initializeCamera();
     }
   });
 
-  // Nettoyer les ressources lors de la sortie de la page
+  // S'assurer que la caméra est arrêtée lorsque l'utilisateur quitte la page
   useIonViewWillLeave(() => {
     stopCamera();
   });
 
+  // Nettoyage complet lors de la sortie de la vue
+  useIonViewDidLeave(() => {
+    // Arrêter complètement la caméra et libérer toutes les ressources
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+
+    setCameraActive(false);
+    isMounted.current = false;
+  });
+
   // Initialiser la caméra
   const initializeCamera = async () => {
-    if (cameraActive || showFriendsList) return; // Éviter de réinitialiser si déjà active ou si on montre la liste d'amis
+    // Ne pas initialiser si le composant n'est plus monté ou si la caméra est déjà active
+    if (!isMounted.current || cameraActive || showFriendsList) return;
 
     setIsLoading(true);
     try {
@@ -93,6 +112,12 @@ const CameraPage: React.FC = () => {
         audio: false
       });
 
+      // Vérifier à nouveau si le composant est monté avant de continuer
+      if (!isMounted.current) {
+        permissions.getTracks().forEach(track => track.stop());
+        return;
+      }
+
       setCameraPermission(true);
 
       // Stocker le stream pour pouvoir l'arrêter plus tard
@@ -103,7 +128,9 @@ const CameraPage: React.FC = () => {
         videoRef.current.srcObject = permissions;
         videoRef.current.play()
           .then(() => {
-            setCameraActive(true);
+            if (isMounted.current) {
+              setCameraActive(true);
+            }
           })
           .catch(err => {
             console.error("Erreur lors de la lecture vidéo:", err);
@@ -111,28 +138,43 @@ const CameraPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Erreur lors de l\'initialisation de la caméra:', error);
-      setCameraPermission(false);
+      if (isMounted.current) {
+        setCameraPermission(false);
+      }
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   // Arrêter la caméra
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      // Arrêter toutes les pistes vidéo et audio
+      streamRef.current.getTracks().forEach(track => {
+        if (track.readyState === 'live') {
+          track.stop();
+        }
+      });
       streamRef.current = null;
     }
 
     if (videoRef.current) {
       videoRef.current.srcObject = null;
+      videoRef.current.load(); // Force le navigateur à libérer les ressources
     }
 
-    setCameraActive(false);
+    if (isMounted.current) {
+      setCameraActive(false);
+    }
   };
 
   // Fonction spécifique pour relancer la caméra après annulation
   const restartCamera = async () => {
+    // Ne pas tenter de relancer si non monté
+    if (!isMounted.current) return;
+
     // S'assurer que tous les états sont réinitialisés
     setPhoto(null);
     setIsRecording(false);
@@ -152,6 +194,9 @@ const CameraPage: React.FC = () => {
     // Petit délai pour s'assurer que tout est nettoyé
     await new Promise(resolve => setTimeout(resolve, 200));
 
+    // Vérifier à nouveau si toujours monté
+    if (!isMounted.current) return;
+
     // Démarrer une nouvelle instance de caméra
     try {
       setIsLoading(true);
@@ -162,22 +207,35 @@ const CameraPage: React.FC = () => {
         audio: false
       });
 
+      // Vérifier si toujours monté
+      if (!isMounted.current) {
+        permissions.getTracks().forEach(track => track.stop());
+        return;
+      }
+
       streamRef.current = permissions;
 
       if (videoRef.current) {
         videoRef.current.srcObject = permissions;
         await videoRef.current.play();
-        setCameraActive(true);
+
+        if (isMounted.current) {
+          setCameraActive(true);
+        }
       }
     } catch (error) {
       console.error('Erreur lors de la réinitialisation de la caméra:', error);
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   // Basculer entre la caméra frontale et arrière
   const toggleCameraDirection = async () => {
+    if (!isMounted.current) return;
+
     setIsLoading(true);
     stopCamera();
 
@@ -188,13 +246,15 @@ const CameraPage: React.FC = () => {
 
     // Petit délai pour s'assurer que les ressources sont libérées
     setTimeout(() => {
-      initializeCamera();
+      if (isMounted.current) {
+        initializeCamera();
+      }
     }, 300);
   };
 
   // Fonction pour prendre une photo à partir du flux vidéo en direct
   const takePhoto = async () => {
-    if (!videoRef.current || !cameraActive) return;
+    if (!videoRef.current || !cameraActive || !isMounted.current) return;
 
     setIsLoading(true);
     try {
@@ -219,22 +279,32 @@ const CameraPage: React.FC = () => {
         // Arrêter la caméra avant de définir la photo
         stopCamera();
 
-        // Définir la photo
-        setPhoto(dataUrl);
+        // Vérifier si toujours monté
+        if (isMounted.current) {
+          // Définir la photo
+          setPhoto(dataUrl);
+        }
       }
     } catch (error) {
       console.error('Erreur lors de la prise de photo:', error);
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   // Fonction pour démarrer l'enregistrement vidéo
   const startVideoRecording = async () => {
+    if (!isMounted.current) return;
+
     if (!cameraActive || !videoRef.current || !streamRef.current) {
       await initializeCamera();
       // Petit délai pour s'assurer que la caméra est initialisée
       await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Vérifier si toujours monté
+      if (!isMounted.current) return;
     }
 
     try {
@@ -242,6 +312,11 @@ const CameraPage: React.FC = () => {
       const audioStream = await navigator.mediaDevices.getUserMedia({
         audio: true
       });
+
+      if (!isMounted.current) {
+        audioStream.getTracks().forEach(track => track.stop());
+        return;
+      }
 
       // Combiner les pistes audio et vidéo
       const videoStream = streamRef.current;
@@ -265,6 +340,11 @@ const CameraPage: React.FC = () => {
 
       // Quand l'enregistrement est terminé
       mediaRecorder.onstop = () => {
+        if (!isMounted.current) {
+          audioStream.getTracks().forEach(track => track.stop());
+          return;
+        }
+
         const videoBlob = new Blob(chunksRef.current, { type: 'video/webm' });
         const videoUrl = URL.createObjectURL(videoBlob);
 
@@ -275,25 +355,32 @@ const CameraPage: React.FC = () => {
         stopCamera();
 
         // Définir la vidéo et désactiver l'enregistrement
-        setPhoto(videoUrl);
-        setIsRecording(false);
+        if (isMounted.current) {
+          setPhoto(videoUrl);
+          setIsRecording(false);
+        }
       };
 
       // Démarrer l'enregistrement
       mediaRecorder.start();
-      setIsRecording(true);
-      setRecordingTime(0);
+
+      if (isMounted.current) {
+        setIsRecording(true);
+        setRecordingTime(0);
+      }
 
       // Démarrer le chronomètre
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => {
-          // Si on atteint 10 secondes, on arrête l'enregistrement
-          if (prev >= 10) {
-            stopVideoRecording();
-            return 10;
-          }
-          return prev + 1;
-        });
+        if (isMounted.current) {
+          setRecordingTime(prev => {
+            // Si on atteint 10 secondes, on arrête l'enregistrement
+            if (prev >= 10) {
+              stopVideoRecording();
+              return 10;
+            }
+            return prev + 1;
+          });
+        }
       }, 1000);
 
     } catch (error) {
@@ -316,8 +403,12 @@ const CameraPage: React.FC = () => {
   // Nettoyer le timer si le composant est démonté
   useEffect(() => {
     return () => {
+      isMounted.current = false;
+
+      // Nettoyer le timer
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
 
       // Arrêter l'enregistrement vidéo si en cours
@@ -325,13 +416,26 @@ const CameraPage: React.FC = () => {
         mediaRecorderRef.current.stop();
       }
 
-      // Arrêter la caméra
-      stopCamera();
+      // Arrêter la caméra et libérer les ressources
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          if (track.readyState === 'live') {
+            track.stop();
+          }
+        });
+        streamRef.current = null;
+      }
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
     };
   }, []);
 
   // Fonction pour annuler/supprimer la photo ou vidéo et revenir à la caméra
   const cancelMedia = () => {
+    if (!isMounted.current) return;
+
     setPhoto(null);
     if (isRecording) {
       stopVideoRecording();
@@ -342,6 +446,7 @@ const CameraPage: React.FC = () => {
 
   // Fonction pour basculer le flash (à implémenter selon les capacités du navigateur)
   const toggleFlash = () => {
+    if (!isMounted.current) return;
     setUseFlash(prev => !prev);
     // Note: L'implémentation réelle du flash dépend des capacités du navigateur
     // et peut nécessiter l'utilisation d'une API spécifique ou d'un plugin Capacitor
@@ -349,6 +454,8 @@ const CameraPage: React.FC = () => {
 
   // Gérer la sélection/désélection d'un ami
   const toggleFriendSelection = (friendId: string) => {
+    if (!isMounted.current) return;
+
     setSelectedFriends(prev => {
       if (prev.includes(friendId)) {
         return prev.filter(id => id !== friendId);
@@ -360,6 +467,8 @@ const CameraPage: React.FC = () => {
 
   // Envoyer le média aux amis sélectionnés
   const sendToSelectedFriends = () => {
+    if (!isMounted.current) return;
+
     if (selectedFriends.length === 0) {
       setToastMessage("Veuillez sélectionner au moins un ami");
       setShowToast(true);
@@ -370,6 +479,8 @@ const CameraPage: React.FC = () => {
     setIsLoading(true);
 
     setTimeout(() => {
+      if (!isMounted.current) return;
+
       // Réinitialiser tout après l'envoi
       setIsLoading(false);
       setShowFriendsList(false);
@@ -388,12 +499,16 @@ const CameraPage: React.FC = () => {
 
   // Annuler la sélection et revenir à la prévisualisation
   const cancelFriendSelection = () => {
+    if (!isMounted.current) return;
+
     setShowFriendsList(false);
     setSelectedFriends([]);
   };
 
   // Fonction pour envoyer la photo ou vidéo
   const sendMedia = () => {
+    if (!isMounted.current) return;
+
     // Afficher les options d'envoi
     presentActionSheet({
       header: 'Envoyer à',
@@ -403,7 +518,9 @@ const CameraPage: React.FC = () => {
           icon: send,
           handler: () => {
             // Afficher la page de sélection d'amis
-            setShowFriendsList(true);
+            if (isMounted.current) {
+              setShowFriendsList(true);
+            }
           }
         },
         {
@@ -412,8 +529,13 @@ const CameraPage: React.FC = () => {
           handler: () => {
             console.log('Publier dans Story');
             // Simuler l'envoi à la story
-            setIsLoading(true);
+            if (isMounted.current) {
+              setIsLoading(true);
+            }
+
             setTimeout(() => {
+              if (!isMounted.current) return;
+
               setIsLoading(false);
               setPhoto(null);
               restartCamera();
