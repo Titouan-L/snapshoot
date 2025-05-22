@@ -28,12 +28,12 @@ const TabsContainer: React.FC = () => {
             <IonRouterOutlet>
                 <Route path="/tabs/camera" component={CameraPage} exact />
                 <Route
-                    path="/tabs/social/group/:id"
+                    path="/tabs/social/group/:groupId"
                     component={GroupConversation}
                     exact
                 />
                 <Route
-                    path="/tabs/social/private/:id"
+                    path="/tabs/social/private/:friendId"
                     component={PrivateConversation}
                     exact
                 />

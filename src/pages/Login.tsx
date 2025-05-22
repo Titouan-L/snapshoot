@@ -182,45 +182,16 @@ const Login: React.FC = () => {
             cssClass: "loading-spinner"
         });
 
-        /*
-        // Préparer les en-têtes et le corps de la requête
-        const myHeaders = new Headers();
-        myHeaders.append("Content-Type", "application/json");
-        myHeaders.append("X-API-Key", "{{token}}");
-
-        const raw = JSON.stringify({
-            email: loginEmail,
-            password: loginPassword,
-        });
-
-        const requestOptions = {
-            method: "POST",
-            headers: myHeaders,
-            body: raw,
-            redirect: "follow"
-        };
-
-        // Faire l'appel API
-        const response = await fetch("http://localhost/api/auth/login", requestOptions);
-        const result = await response.text();
-        console.log("result :" + result); // Vérifier la réponse dans la console
-
-        // Vérifier si le token est présent dans la réponse
-        if (result.token) {
-            console.log("Token reçu:", result.token);
-        */
             // Appeler la fonction de connexion
             await login(loginEmail, loginPassword);
 
             // Masquer l'indicateur de chargement
             await dismiss();
 
+            console.log("Connexion réussie");
+
             // Rediriger vers la page de la caméra après la connexion
             router.push("/tabs/camera", "forward", "push");
-            /*
-        } else {
-            throw new Error("Token non reçu");
-        }*/
         
     } catch (error) {
         // Masquer l'indicateur de chargement en cas d'erreur

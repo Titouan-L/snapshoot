@@ -1,4 +1,3 @@
-// src/pages/tabs/socialPages/Friends.tsx
 import React, { useState, useEffect } from "react";
 import {
     IonSearchbar,
@@ -24,18 +23,51 @@ import {
     IonText,
     IonProgressBar,
 } from "@ionic/react";
-import { sendOutline, ellipse, addOutline, closeOutline, personAddOutline, timeOutline, playOutline } from "ionicons/icons";
+import {
+    sendOutline,
+    ellipse,
+    addOutline,
+    closeOutline,
+    personAddOutline,
+    timeOutline,
+    playOutline,
+} from "ionicons/icons";
 import { useIonRouter } from "@ionic/react";
 import { Preferences } from "@capacitor/preferences";
 
-// Mock data - conservé tel quel
-const mockFriends = [
-    { id: "1", username: "Alice", profilePicture: "", userStatus: "ONLINE" },
-    { id: "2", username: "Bob", profilePicture: "", userStatus: "OFFLINE" },
-    { id: "3", username: "Charlie", profilePicture: "", userStatus: "ONLINE" },
-];
+// Interface pour les amis
+interface Friend {
+    id: string;
+    username: string;
+    profilePicture: string;
+    userStatus: string;
+}
 
-// Mock data pour les stories
+// Interface pour les stories
+interface Story {
+    id: string;
+    type: string;
+    url: string;
+    timestamp: number;
+}
+
+interface StoryUser {
+    id: string;
+    userId: string;
+    username: string;
+    profilePicture: string;
+    hasNewStory: boolean;
+    stories: Story[];
+}
+
+// Interface pour les résultats de recherche utilisateur
+interface UserSearchResult {
+    id: string;
+    username: string;
+    profilePicture: string;
+}
+
+// Mock data pour les stories (à remplacer plus tard par API)
 const mockStories = [
     {
         id: "1",
@@ -44,9 +76,19 @@ const mockStories = [
         profilePicture: "",
         hasNewStory: true,
         stories: [
-            { id: "s1", type: "image", url: "https://picsum.photos/id/237/800/1200", timestamp: new Date().getTime() - 3600000 },
-            { id: "s2", type: "image", url: "https://picsum.photos/id/238/800/1200", timestamp: new Date().getTime() - 1800000 }
-        ]
+            {
+                id: "s1",
+                type: "image",
+                url: "https://picsum.photos/id/237/800/1200",
+                timestamp: new Date().getTime() - 3600000,
+            },
+            {
+                id: "s2",
+                type: "image",
+                url: "https://picsum.photos/id/238/800/1200",
+                timestamp: new Date().getTime() - 1800000,
+            },
+        ],
     },
     {
         id: "2",
@@ -55,8 +97,13 @@ const mockStories = [
         profilePicture: "",
         hasNewStory: true,
         stories: [
-            { id: "s3", type: "image", url: "https://picsum.photos/id/239/800/1200", timestamp: new Date().getTime() - 7200000 }
-        ]
+            {
+                id: "s3",
+                type: "image",
+                url: "https://picsum.photos/id/239/800/1200",
+                timestamp: new Date().getTime() - 7200000,
+            },
+        ],
     },
     {
         id: "3",
@@ -65,8 +112,13 @@ const mockStories = [
         profilePicture: "",
         hasNewStory: false,
         stories: [
-            { id: "s4", type: "video", url: "https://www.w3schools.com/html/mov_bbb.mp4", timestamp: new Date().getTime() - 43200000 }
-        ]
+            {
+                id: "s4",
+                type: "video",
+                url: "https://www.w3schools.com/html/mov_bbb.mp4",
+                timestamp: new Date().getTime() - 43200000,
+            },
+        ],
     },
     {
         id: "4",
@@ -75,8 +127,13 @@ const mockStories = [
         profilePicture: "",
         hasNewStory: true,
         stories: [
-            { id: "s5", type: "image", url: "https://picsum.photos/id/240/800/1200", timestamp: new Date().getTime() - 1200000 }
-        ]
+            {
+                id: "s5",
+                type: "image",
+                url: "https://picsum.photos/id/240/800/1200",
+                timestamp: new Date().getTime() - 1200000,
+            },
+        ],
     },
     {
         id: "5",
@@ -85,12 +142,16 @@ const mockStories = [
         profilePicture: "",
         hasNewStory: true,
         stories: [
-            { id: "s6", type: "image", url: "https://picsum.photos/id/241/800/1200", timestamp: new Date().getTime() - 900000 }
-        ]
-    }
+            {
+                id: "s6",
+                type: "image",
+                url: "https://picsum.photos/id/241/800/1200",
+                timestamp: new Date().getTime() - 900000,
+            },
+        ],
+    },
 ];
 
-// Version simple sans Swiper
 const Friends: React.FC = () => {
     // Ajout d'un log pour voir si le composant est monté
     console.log("Friends component mounted");
@@ -98,45 +159,118 @@ const Friends: React.FC = () => {
     const [search, setSearch] = useState("");
     const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
+    const [friends, setFriends] = useState<Friend[]>([]);
     const router = useIonRouter();
 
     // États pour les stories
-    const [selectedStory, setSelectedStory] = useState<any>(null);
+    const [selectedStory, setSelectedStory] = useState<StoryUser | null>(null);
     const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
     const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
     const [storyProgress, setStoryProgress] = useState(0);
-    const [storyTimeout, setStoryTimeout] = useState<NodeJS.Timeout | null>(null);
+    const [storyTimeout, setStoryTimeout] = useState<NodeJS.Timeout | null>(
+        null
+    );
 
-    const filteredFriends = mockFriends.filter((f) =>
+    // Filtrage des amis basé sur la recherche
+    const filteredFriends = friends.filter((f) =>
         f.username.toLowerCase().includes(search.toLowerCase())
     );
 
+    // Fonction pour récupérer le token d'authentification
+    async function getAuthToken() {
+        try {
+            const { value } = await Preferences.get({ key: "authToken" });
+            return value || "";
+        } catch (error) {
+            console.error("Erreur lors de la récupération du token:", error);
+            return "";
+        }
+    }
+
+    // Fonction pour charger la liste des amis depuis l'API
+    const loadFriends = async () => {
+        try {
+            const token = await getAuthToken();
+
+            const myHeaders = new Headers();
+            myHeaders.append("Authorization", `Bearer ${token}`);
+
+            const requestOptions = {
+                method: "GET",
+                headers: myHeaders,
+                redirect: "follow" as RequestRedirect,
+            };
+
+            const response = await fetch(
+                "http://localhost/api/private/users/friends",
+                requestOptions
+            );
+
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            // CORRECTED LINE: Access the 'friends' property from the response data
+            if (data && Array.isArray(data.friends)) {
+                setFriends(data.friends);
+            } else {
+                console.warn(
+                    "API response for friends is not in the expected format.",
+                    data
+                );
+                setFriends([]); // Set to an empty array to prevent 'filter is not a function' error
+            }
+        } catch (error) {
+            console.error("Erreur lors du chargement des amis:", error);
+            // Utilisation de données mockées en cas d'échec
+            setFriends([
+                {
+                    id: "1",
+                    username: "Alice",
+                    profilePicture: "",
+                    userStatus: "ONLINE",
+                },
+                {
+                    id: "2",
+                    username: "Bob",
+                    profilePicture: "",
+                    userStatus: "OFFLINE",
+                },
+                {
+                    id: "3",
+                    username: "Charlie",
+                    profilePicture: "",
+                    userStatus: "ONLINE",
+                },
+            ]);
+        }
+    };
+
     // Fonction pour naviguer vers la conversation avec l'ami sélectionné
-    const navigateToConversation = (friendId: string, friendUsername: string) => {
+    const navigateToConversation = (
+        friendId: string,
+        friendUsername: string
+    ) => {
+        console.log(
+            "Navigating to conversation with:",
+            friendId,
+            friendUsername
+        );
         // Passage à la fois de l'ID dans l'URL et du nom en state
         router.push({
             pathname: `/tabs/social/private/${friendId}`,
             state: {
                 friendId: friendId,
-                friendUsername: friendUsername
-            }
-        });
+                friendUsername: friendUsername,
+            },
+        } as any);
     };
 
-    async function getAuthToken() {
-        try {
-            const { value } = await Preferences.get({ key: 'authToken' });
-            return value;
-        } catch (error) {
-            console.error('Erreur lors de la récupération du token:', error);
-            return null;
-        }
-    }
-
-    // Fonction pour rechercher des utilisateurs avec fetch
+    // Fonction pour rechercher des utilisateurs avec l'API
     const searchUsers = async (prefix: string) => {
         if (prefix.length < 2) {
             setSearchResults([]);
@@ -145,55 +279,69 @@ const Friends: React.FC = () => {
 
         try {
             const token = await getAuthToken();
-            const response = await fetch(`http://localhost/private/users/search/${prefix}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-            });
+
+            console.log("prefix", prefix);
+
+            const myHeaders = new Headers();
+            myHeaders.append("Authorization", `Bearer ${token}`);
+
+            const requestOptions = {
+                method: "GET",
+                headers: myHeaders,
+                redirect: "follow" as RequestRedirect,
+            };
+
+            const response = await fetch(
+                `http://localhost/api/private/users/search/${prefix}`,
+                requestOptions
+            );
+
+            console.log("response", response);
 
             if (!response.ok) {
                 throw new Error(`Erreur HTTP: ${response.status}`);
             }
 
             const data = await response.json();
-            setSearchResults(data);
+            console.log("data", data);
+            // Correction ici: Accédez à la propriété 'users' de l'objet 'data'
+            setSearchResults(data.users);
         } catch (error) {
             console.error("Erreur lors de la recherche d'utilisateurs:", error);
-            // Pour la démo, on utilise des données simulées si l'API échoue
-            setSearchResults([
-                { id: "101", username: "David", profilePicture: "" },
-                { id: "102", username: "Emma", profilePicture: "" },
-                { id: "103", username: "Frank", profilePicture: "" },
-            ].filter(user => user.username.toLowerCase().includes(prefix.toLowerCase())));
         }
     };
 
-    // Fonction pour ajouter un ami avec fetch
+    // Fonction pour ajouter un ami avec l'API
     const addFriend = async (friendId: string, friendUsername: string) => {
         try {
             const token = await getAuthToken();
-            const response = await fetch(`http://localhost/private/users/add/${friendId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-            });
+
+            const myHeaders = new Headers();
+            myHeaders.append("Authorization", `Bearer ${token}`);
+            myHeaders.append("Content-Type", "application/json");
+
+            const requestOptions = {
+                method: "POST",
+                headers: myHeaders,
+                redirect: "follow" as RequestRedirect,
+            };
+
+            const response = await fetch(
+                `http://localhost/api/private/users/add/${friendId}`,
+                requestOptions
+            );
 
             if (!response.ok) {
                 throw new Error(`Erreur HTTP: ${response.status}`);
             }
 
-            // Si l'API renvoie des données, vous pouvez les traiter ici
-            // const data = await response.json();
-
-            setToastMessage(`${friendUsername} a été ajouté à votre liste d'amis`);
+            setToastMessage(
+                `${friendUsername} a été ajouté à votre liste d'amis`
+            );
             setShowToast(true);
 
-            // On peut rafraîchir la liste des amis ici si nécessaire
-            // Dans un vrai cas, vous pourriez vouloir recharger la liste des amis
+            // Raffraîchir la liste des amis après l'ajout
+            loadFriends();
 
             // Fermer le modal après ajout réussi
             setIsAddFriendModalOpen(false);
@@ -205,7 +353,7 @@ const Friends: React.FC = () => {
     };
 
     // Ouvrir une story
-    const openStory = (story: any) => {
+    const openStory = (story: StoryUser) => {
         console.log("Opening story:", story);
         setSelectedStory(story);
         setCurrentStoryIndex(0);
@@ -273,6 +421,11 @@ const Friends: React.FC = () => {
         setStoryProgress(0);
     };
 
+    // Charger les amis au montage du composant
+    useEffect(() => {
+        loadFriends();
+    }, []);
+
     // Effet pour la recherche d'utilisateurs
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
@@ -311,8 +464,6 @@ const Friends: React.FC = () => {
 
     return (
         <>
-
-
             <IonSearchbar
                 value={search}
                 onIonChange={(e) => setSearch(e.detail.value!)}
@@ -320,11 +471,26 @@ const Friends: React.FC = () => {
             />
 
             {/* Section des stories (sans Swiper pour le moment) */}
-            <div className="stories-container" style={{ margin: "10px 0", overflowX: "auto" }}>
-                <IonTitle size="small" style={{ padding: "0 10px", margin: "5px 0" }}>Stories</IonTitle>
+            <div
+                className="stories-container"
+                style={{ margin: "10px 0", overflowX: "auto" }}
+            >
+                <IonTitle
+                    size="small"
+                    style={{ padding: "0 10px", margin: "5px 0" }}
+                >
+                    Stories
+                </IonTitle>
 
                 {/* Version simple sans Swiper */}
-                <div style={{ display: "flex", padding: "0 10px", gap: "10px", overflowX: "auto" }}>
+                <div
+                    style={{
+                        display: "flex",
+                        padding: "0 10px",
+                        gap: "10px",
+                        overflowX: "auto",
+                    }}
+                >
                     {mockStories.map((storyItem) => (
                         <div
                             key={storyItem.id}
@@ -334,7 +500,7 @@ const Friends: React.FC = () => {
                                 flexDirection: "column",
                                 alignItems: "center",
                                 width: "70px",
-                                flexShrink: 0
+                                flexShrink: 0,
                             }}
                             onClick={() => openStory(storyItem)}
                         >
@@ -344,19 +510,36 @@ const Friends: React.FC = () => {
                                     width: "60px",
                                     height: "60px",
                                     borderRadius: "50%",
-                                    border: storyItem.hasNewStory ? "2px solid #3880ff" : "2px solid #cccccc",
+                                    border: storyItem.hasNewStory
+                                        ? "2px solid #3880ff"
+                                        : "2px solid #cccccc",
                                     padding: "2px",
-                                    overflow: "hidden"
+                                    overflow: "hidden",
                                 }}
                             >
-                                <IonAvatar style={{ width: "100%", height: "100%" }}>
+                                <IonAvatar
+                                    style={{ width: "100%", height: "100%" }}
+                                >
                                     <img
-                                        src={storyItem.profilePicture || "https://ui-avatars.com/api/?name=" + storyItem.username}
+                                        src={
+                                            storyItem.profilePicture ||
+                                            "https://ui-avatars.com/api/?name=" +
+                                                storyItem.username
+                                        }
                                         alt={storyItem.username}
                                     />
                                 </IonAvatar>
                             </div>
-                            <IonText style={{ fontSize: "12px", marginTop: "5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "65px" }}>
+                            <IonText
+                                style={{
+                                    fontSize: "12px",
+                                    marginTop: "5px",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    maxWidth: "65px",
+                                }}
+                            >
                                 {storyItem.username}
                             </IonText>
                         </div>
@@ -371,7 +554,9 @@ const Friends: React.FC = () => {
                     <IonCard
                         key={friend.id}
                         className="friend-card"
-                        onClick={() => navigateToConversation(friend.id, friend.username)}
+                        onClick={() =>
+                            navigateToConversation(friend.id, friend.username)
+                        }
                     >
                         <IonCardContent
                             style={{ display: "flex", alignItems: "center" }}
@@ -382,14 +567,18 @@ const Friends: React.FC = () => {
                                         src={
                                             friend.profilePicture ||
                                             "https://ui-avatars.com/api/?name=" +
-                                            friend.username
+                                                friend.username
                                         }
                                         alt={friend.username}
                                     />
                                 </IonAvatar>
                                 {/* Pastille de statut */}
                                 <IonBadge
-                                    color={friend.userStatus === "ONLINE" ? "success" : "medium"}
+                                    color={
+                                        friend.userStatus === "ONLINE"
+                                            ? "success"
+                                            : "medium"
+                                    }
                                     style={{
                                         position: "absolute",
                                         bottom: 0,
@@ -416,7 +605,10 @@ const Friends: React.FC = () => {
                                 style={{ marginLeft: "auto" }}
                                 onClick={(e) => {
                                     e.stopPropagation(); // Empêche le déclenchement du onClick de la carte
-                                    navigateToConversation(friend.id, friend.username);
+                                    navigateToConversation(
+                                        friend.id,
+                                        friend.username
+                                    );
                                 }}
                             >
                                 <IonIcon icon={sendOutline} slot="icon-only" />
@@ -434,12 +626,17 @@ const Friends: React.FC = () => {
             </IonFab>
 
             {/* Modal pour rechercher et ajouter des amis */}
-            <IonModal isOpen={isAddFriendModalOpen} onDidDismiss={() => setIsAddFriendModalOpen(false)}>
+            <IonModal
+                isOpen={isAddFriendModalOpen}
+                onDidDismiss={() => setIsAddFriendModalOpen(false)}
+            >
                 <IonHeader>
                     <IonToolbar>
                         <IonTitle>Ajouter un ami</IonTitle>
                         <IonButtons slot="end">
-                            <IonButton onClick={() => setIsAddFriendModalOpen(false)}>
+                            <IonButton
+                                onClick={() => setIsAddFriendModalOpen(false)}
+                            >
                                 <IonIcon icon={closeOutline} slot="icon-only" />
                             </IonButton>
                         </IonButtons>
@@ -456,42 +653,62 @@ const Friends: React.FC = () => {
                         {searchResults.map((user) => (
                             <IonCard key={user.id} className="user-card">
                                 <IonCardContent
-                                    style={{ display: "flex", alignItems: "center" }}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                    }}
                                 >
                                     <IonAvatar>
                                         <img
                                             src={
                                                 user.profilePicture ||
                                                 "https://ui-avatars.com/api/?name=" +
-                                                user.username
+                                                    user.username
                                             }
                                             alt={user.username}
                                         />
                                     </IonAvatar>
-                                    <IonLabel style={{ flex: 1, marginLeft: 16 }}>
+                                    <IonLabel
+                                        style={{ flex: 1, marginLeft: 16 }}
+                                    >
                                         {user.username}
                                     </IonLabel>
                                     <IonButton
                                         color="primary"
                                         size="small"
-                                        onClick={() => addFriend(user.id, user.username)}
+                                        onClick={() =>
+                                            addFriend(user.id, user.username)
+                                        }
                                     >
-                                        <IonIcon icon={personAddOutline} slot="icon-only" />
+                                        <IonIcon
+                                            icon={personAddOutline}
+                                            slot="icon-only"
+                                        />
                                     </IonButton>
                                 </IonCardContent>
                             </IonCard>
                         ))}
-                        {searchQuery.length > 0 && searchResults.length === 0 && (
-                            <div style={{ textAlign: "center", padding: "20px" }}>
-                                Aucun utilisateur trouvé
-                            </div>
-                        )}
+                        {searchQuery.length > 0 &&
+                            searchResults.length === 0 && (
+                                <div
+                                    style={{
+                                        textAlign: "center",
+                                        padding: "20px",
+                                    }}
+                                >
+                                    Aucun utilisateur trouvé
+                                </div>
+                            )}
                     </IonList>
                 </IonContent>
             </IonModal>
 
             {/* Modal pour afficher les stories */}
-            <IonModal isOpen={isStoryModalOpen} onDidDismiss={closeStoryModal} backdropDismiss={false}>
+            <IonModal
+                isOpen={isStoryModalOpen}
+                onDidDismiss={closeStoryModal}
+                backdropDismiss={false}
+            >
                 <div
                     style={{
                         width: "100%",
@@ -502,16 +719,34 @@ const Friends: React.FC = () => {
                     }}
                 >
                     {/* Header avec progression et info utilisateur */}
-                    <div style={{ padding: "10px", display: "flex", alignItems: "center", zIndex: 1000 }}>
+                    <div
+                        style={{
+                            padding: "10px",
+                            display: "flex",
+                            alignItems: "center",
+                            zIndex: 1000,
+                        }}
+                    >
                         {/* Barres de progression pour chaque story */}
                         <div style={{ display: "flex", flex: 1, gap: "2px" }}>
-                            {selectedStory?.stories.map((_: any, index: number) => (
-                                <IonProgressBar
-                                    key={index}
-                                    value={index === currentStoryIndex ? storyProgress : (index < currentStoryIndex ? 1 : 0)}
-                                    style={{ height: "3px", borderRadius: "3px" }}
-                                />
-                            ))}
+                            {selectedStory?.stories.map(
+                                (_: any, index: number) => (
+                                    <IonProgressBar
+                                        key={index}
+                                        value={
+                                            index === currentStoryIndex
+                                                ? storyProgress
+                                                : index < currentStoryIndex
+                                                ? 1
+                                                : 0
+                                        }
+                                        style={{
+                                            height: "3px",
+                                            borderRadius: "3px",
+                                        }}
+                                    />
+                                )
+                            )}
                         </div>
 
                         {/* Bouton pour fermer */}
@@ -526,19 +761,43 @@ const Friends: React.FC = () => {
                     </div>
 
                     {/* Info utilisateur */}
-                    <div style={{ padding: "0 10px 10px", display: "flex", alignItems: "center", zIndex: 1000 }}>
+                    <div
+                        style={{
+                            padding: "0 10px 10px",
+                            display: "flex",
+                            alignItems: "center",
+                            zIndex: 1000,
+                        }}
+                    >
                         <IonAvatar style={{ width: "30px", height: "30px" }}>
                             <img
-                                src={selectedStory?.profilePicture || "https://ui-avatars.com/api/?name=" + selectedStory?.username}
+                                src={
+                                    selectedStory?.profilePicture ||
+                                    "https://ui-avatars.com/api/?name=" +
+                                        selectedStory?.username
+                                }
                                 alt={selectedStory?.username}
                             />
                         </IonAvatar>
                         <IonLabel style={{ marginLeft: "10px", color: "#fff" }}>
                             {selectedStory?.username}
                         </IonLabel>
-                        <IonLabel style={{ marginLeft: "auto", color: "#ccc", fontSize: "12px" }}>
-                            <IonIcon icon={timeOutline} style={{ marginRight: "5px", fontSize: "14px" }} />
-                            {selectedStory?.stories[currentStoryIndex] && formatTimeAgo(selectedStory.stories[currentStoryIndex].timestamp)}
+                        <IonLabel
+                            style={{
+                                marginLeft: "auto",
+                                color: "#ccc",
+                                fontSize: "12px",
+                            }}
+                        >
+                            <IonIcon
+                                icon={timeOutline}
+                                style={{ marginRight: "5px", fontSize: "14px" }}
+                            />
+                            {selectedStory?.stories[currentStoryIndex] &&
+                                formatTimeAgo(
+                                    selectedStory.stories[currentStoryIndex]
+                                        .timestamp
+                                )}
                         </IonLabel>
                     </div>
 
@@ -550,31 +809,50 @@ const Friends: React.FC = () => {
                             display: "flex",
                             justifyContent: "center",
                             alignItems: "center",
-                            overflow: "hidden"
+                            overflow: "hidden",
                         }}
                     >
                         {/* Zones tactiles pour naviguer entre les stories */}
                         <div
-                            style={{ position: "absolute", left: 0, top: 0, width: "33%", height: "100%", zIndex: 900 }}
+                            style={{
+                                position: "absolute",
+                                left: 0,
+                                top: 0,
+                                width: "33%",
+                                height: "100%",
+                                zIndex: 900,
+                            }}
                             onClick={goToPrevStory}
                         />
                         <div
-                            style={{ position: "absolute", right: 0, top: 0, width: "33%", height: "100%", zIndex: 900 }}
+                            style={{
+                                position: "absolute",
+                                right: 0,
+                                top: 0,
+                                width: "33%",
+                                height: "100%",
+                                zIndex: 900,
+                            }}
                             onClick={goToNextStory}
                         />
 
                         {/* Afficher l'image ou la vidéo */}
-                        {selectedStory?.stories[currentStoryIndex]?.type === "image" ? (
+                        {selectedStory?.stories[currentStoryIndex]?.type ===
+                        "image" ? (
                             <img
-                                src={selectedStory?.stories[currentStoryIndex]?.url}
+                                src={
+                                    selectedStory?.stories[currentStoryIndex]
+                                        ?.url
+                                }
                                 alt="Story"
                                 style={{
                                     width: "100%",
                                     height: "100%",
-                                    objectFit: "contain"
+                                    objectFit: "contain",
                                 }}
                             />
-                        ) : selectedStory?.stories[currentStoryIndex]?.type === "video" ? (
+                        ) : selectedStory?.stories[currentStoryIndex]?.type ===
+                          "video" ? (
                             <video
                                 autoPlay
                                 controls={false}
@@ -589,25 +867,24 @@ const Friends: React.FC = () => {
                                 style={{
                                     width: "100%",
                                     height: "100%",
-                                    objectFit: "contain"
+                                    objectFit: "contain",
                                 }}
                             >
-                                <source src={selectedStory?.stories[currentStoryIndex]?.url} type="video/mp4" />
-                                Votre navigateur ne prend pas en charge la vidéo.
+                                <source
+                                    src={
+                                        selectedStory?.stories[
+                                            currentStoryIndex
+                                        ]?.url
+                                    }
+                                    type="video/mp4"
+                                />
+                                Votre navigateur ne prend pas en charge la
+                                vidéo.
                             </video>
                         ) : null}
                     </div>
                 </div>
             </IonModal>
-
-            {/* Toast de notification */}
-            <IonToast
-                isOpen={showToast}
-                onDidDismiss={() => setShowToast(false)}
-                message={toastMessage}
-                duration={2000}
-                position="bottom"
-            />
         </>
     );
 };

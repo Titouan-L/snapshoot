@@ -1,35 +1,139 @@
+/* Styles généraux pour les bulles de message */
 .message-bubble {
-    background: #f4f4f4;
-    border-radius: 15px;
-    padding: 10px;
-    margin: 5px 0;
+    padding: 10px 15px;
+    border-radius: 20px;
+    margin-bottom: 5px;
+    max-width: 75%; /* Limite la largeur de la bulle */
+    display: inline-block; /* Permet à la bulle de s'ajuster au contenu */
+    position: relative; /* Pour positionner l'heure */
+    word-wrap: break-word; /* Casse les mots longs pour éviter les dépassements */
+    white-space: pre-wrap; /* Maintient les sauts de ligne */
 }
 
-.message-sent .message-bubble {
-    background: #3880ff;
-    color: white;
-    margin-left: auto;
-    max-width: 70%;
-}
-
-.message-received .message-bubble {
-    background: #f4f4f4;
-    margin-right: auto;
-    max-width: 70%;
+.message-text {
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.4;
 }
 
 .message-time {
-    font-size: 0.8rem;
-    color: #666;
-    display: block;
-    margin-top: 4px;
+    font-size: 0.7em;
+    opacity: 0.8;
+    margin-top: 5px;
+    display: block; /* S'assure que l'heure est sur une nouvelle ligne */
+    text-align: right; /* Heure alignée à droite dans la bulle */
+    color: inherit; /* Hérite la couleur du texte parent */
 }
 
-.message-input-container {
+/* Styles pour les messages envoyés par l'utilisateur connecté */
+.message-sent {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    --padding-end: 0; /* Important pour coller à droite */
+    --min-height: auto;
+    width: 100%; /* Permet à l'IonItem de prendre toute la largeur */
     display: flex;
-    padding: 10px;
-    align-items: center;
-    background: #fff;
-    position: sticky;
-    bottom: 0;
+    justify-content: flex-end; /* Colle le message à droite */
+}
+
+.message-sent .message-bubble {
+    background-color: var(--ion-color-primary, #3880ff); /* Bleu */
+    color: white; /* Texte blanc */
+    margin-left: auto; /* Pousse la bulle vers la droite */
+    margin-right: 10px; /* Petit espace avec le bord */
+}
+
+.message-sent .message-bubble .message-time {
+    color: rgba(
+        255,
+        255,
+        255,
+        0.8
+    ); /* Texte blanc légèrement transparent pour l'heure */
+}
+
+/* Styles pour les messages reçus */
+.message-received {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    --padding-end: 0;
+    --min-height: auto;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start; /* Colle le message à gauche */
+}
+
+.message-received .message-bubble {
+    background-color: #e0e0e0; /* Gris */
+    color: black; /* Texte noir */
+    margin-left: 10px; /* Petit espace avec le bord */
+    margin-right: auto; /* Pousse la bulle vers la gauche */
+}
+
+.message-received .message-bubble .message-time {
+    color: rgba(
+        0,
+        0,
+        0,
+        0.6
+    ); /* Texte noir légèrement transparent pour l'heure */
+}
+
+/* Styles pour les avatars dans la liste de messages */
+.message-list ion-avatar {
+    width: 35px; /* Taille de l'avatar */
+    height: 35px;
+    border-radius: 50%; /* Pour une forme ronde */
+    overflow: hidden;
+    flex-shrink: 0; /* Empêche l'avatar de rétrécir */
+}
+
+.message-list ion-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Pour masquer l'avatar de l'utilisateur connecté dans la conversation */
+.hidden-avatar {
+    display: none;
+}
+
+/* Pour s'assurer que les avatars des messages reçus sont visibles */
+.visible-avatar {
+    display: block;
+}
+
+/* Ajustements pour l'IonItem contenant les messages et avatars */
+.message-sent ion-item {
+    align-items: flex-end; /* Alignement de l'avatar et bulle */
+    flex-direction: row-reverse; /* Inverse l'ordre pour avatar à droite */
+}
+
+.message-received ion-item {
+    align-items: flex-start; /* Alignement de l'avatar et bulle */
+}
+
+/* Input et bouton d'envoi */
+ion-footer ion-toolbar {
+    --min-height: 56px; /* Ajustez si nécessaire */
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background: var(--ion-color-light, #f8f8f8); /* Couleur de fond du footer */
+}
+
+.message-input {
+    --padding-start: 10px;
+    --padding-end: 10px;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+    border-radius: 20px;
+    background: var(--ion-color-step-100, #f2f2f2);
+    margin: 5px 0;
+    flex-grow: 1; /* Permet à l'input de prendre l'espace disponible */
+}
+
+.send-button {
+    margin-left: 5px;
+    --padding-end: 5px; /* Ajustement du padding du bouton */
 }

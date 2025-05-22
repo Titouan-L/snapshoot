@@ -1,13 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import { Preferences } from "@capacitor/preferences";
 
-// Définition des types
-export interface User {
-    email: string;
-    username: string;
-    profilePicture?: string | null;
-}
-
 interface UpdateUserData {
     username?: string;
     email?: string;
@@ -15,15 +8,15 @@ interface UpdateUserData {
 }
 
 interface AuthContextType {
-    currentUser: User | null;
-    login: (email: string, password: string) => Promise<User>;
+    authToken: string | null;
+    login: (email: string, password: string) => Promise<void>;
     register: (
         username: string,
         email: string,
         password: string
-    ) => Promise<User>;
+    ) => Promise<void>;
     logout: () => Promise<void>;
-    updateUserProfile?: (data: UpdateUserData) => Promise<User>;
+    updateUserProfile?: (data: UpdateUserData) => Promise<any>;
     isAuthenticated: boolean;
     isLoading: boolean;
 }
@@ -43,211 +36,165 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [authToken, setAuthToken] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    // Charger les données de l'utilisateur stockées au démarrage de l'application
     useEffect(() => {
-        const loadStoredUser = async (): Promise<void> => {
+        const loadStoredToken = async (): Promise<void> => {
             try {
-                const storedUser = await Preferences.get({
-                    key: "currentUser",
-                });
                 const storedToken = await Preferences.get({ key: "authToken" });
-
-                if (storedUser.value && storedToken.value) {
-                    setCurrentUser(JSON.parse(storedUser.value));
+                if (storedToken.value) {
+                    setAuthToken(storedToken.value);
                 }
             } catch (error) {
-                console.error("Error loading stored user data:", error);
+                console.error("Error loading stored token:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        loadStoredUser();
+        loadStoredToken();
     }, []);
 
-    // Fonction de connexion (à remplacer par un appel API réel en production)
-    const login = async (email: string, password: string): Promise<User> => {
+    const login = async (email: string, password: string): Promise<void> => {
         setIsLoading(true);
-        return new Promise<User>((resolve, reject) => {
-            // Ici, vous feriez normalement un appel API à votre backend
-            setTimeout(async () => {
-                try {
-                    // Simuler une vérification d'authentification (à remplacer par votre API)
-                    // Dans un vrai cas d'utilisation, vous récupéreriez ces données depuis votre API
+        try {
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
 
-                    // Créer un objet utilisateur avec les données du formulaire
-                    const user: User = {
-                        email: email,
-                        username: email.split("@")[0], // Par défaut, utilisez la partie locale de l'email comme nom d'utilisateur
-                        profilePicture: null, // Pas d'image de profil par défaut
-                    };
+            const raw = JSON.stringify({ email, password });
 
-                    // Générer un token (à remplacer par le token JWT de votre API)
-                    const token = `auth-token-${Date.now()}`;
+            const requestOptions: RequestInit = {
+                method: "POST",
+                headers: myHeaders,
+                body: raw,
+                redirect: "follow",
+            };
 
-                    // Stocker les données de l'utilisateur dans les préférences
-                    await Preferences.set({
-                        key: "currentUser",
-                        value: JSON.stringify(user),
-                    });
+            const response = await fetch(
+                "http://localhost/api/auth/login",
+                requestOptions
+            );
+            const token = await response.text();
 
-                    // Stocker le token d'authentification
-                    await Preferences.set({
-                        key: "authToken",
-                        value: token,
-                    });
+            if (!response.ok) {
+                throw new Error("Login failed");
+            }
 
-                    // Stocker d'autres informations qui pourraient être utiles
-                    await Preferences.set({
-                        key: "lastLogin",
-                        value: new Date().toISOString(),
-                    });
-
-                    // Mettre à jour l'état de l'application
-                    setCurrentUser(user);
-                    setIsLoading(false);
-
-                    console.log("Utilisateur connecté et stocké:", user);
-                    resolve(user);
-                } catch (error) {
-                    setIsLoading(false);
-                    console.error("Erreur lors de la connexion:", error);
-                    reject(
-                        new Error(
-                            "Erreur lors de la connexion: " + error.message
-                        )
-                    );
-                }
-            }, 1000); // Simuler un délai réseau
-        });
+            await Preferences.set({
+                key: "authToken",
+                value: token,
+            });
+            setAuthToken(token);
+        } catch (error: any) {
+            console.error("Login error:", error);
+            throw new Error("Login failed: " + error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    // Fonction d'inscription (à remplacer par un appel API réel en production)
     const register = async (
         username: string,
         email: string,
         password: string
-    ): Promise<User> => {
+    ): Promise<void> => {
         setIsLoading(true);
-        return new Promise<User>((resolve, reject) => {
-            setTimeout(async () => {
-                try {
-                    // Créer un objet utilisateur complet avec les données du formulaire
-                    const newUser: User = {
-                        id: `user-${Date.now()}`, // Générer un ID unique (à remplacer par l'ID réel de votre API)
-                        email,
-                        username,
-                        profilePicture: null, // Pas d'image de profil par défaut
-                    };
-
-                    // Générer un token (à remplacer par le token JWT de votre API)
-                    const token = `auth-token-${Date.now()}`;
-
-                    // Stocker l'objet utilisateur dans les préférences
-                    await Preferences.set({
-                        key: "currentUser",
-                        value: JSON.stringify(newUser),
-                    });
-
-                    // Stocker le token d'authentification
-                    await Preferences.set({
-                        key: "authToken",
-                        value: token,
-                    });
-
-                    // Stocker d'autres informations qui pourraient être utiles
-                    await Preferences.set({
-                        key: "registrationDate",
-                        value: new Date().toISOString(),
-                    });
-
-                    // Mettre à jour l'état de l'application
-                    setCurrentUser(newUser);
-                    setIsLoading(false);
-
-                    console.log("Nouvel utilisateur créé et stocké:", newUser);
-                    resolve(newUser);
-                } catch (error) {
-                    setIsLoading(false);
-                    console.error("Erreur lors de l'inscription:", error);
-                    reject(
-                        new Error(
-                            "Erreur lors de l'inscription: " + error.message
-                        )
-                    );
-                }
-            }, 1000); // Simuler un délai réseau
-        });
-    };
-
-    // Fonction de déconnexion
-    const logout = async (): Promise<void> => {
         try {
-            // Supprimer les données de l'utilisateur et le token stockés
-            await Preferences.remove({ key: "currentUser" });
-            await Preferences.remove({ key: "authToken" });
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
 
-            setCurrentUser(null);
-        } catch (error) {
-            console.error("Error during logout:", error);
-            throw new Error("Erreur lors de la déconnexion");
+            const raw = JSON.stringify({ username, email, password });
+
+            const requestOptions: RequestInit = {
+                method: "POST",
+                headers: myHeaders,
+                body: raw,
+                redirect: "follow",
+            };
+
+            const response = await fetch(
+                "http://localhost/api/auth/register",
+                requestOptions
+            );
+            const token = await response.text();
+
+            if (!response.ok) {
+                throw new Error("Registration failed");
+            }
+
+            await Preferences.set({
+                key: "authToken",
+                value: token,
+            });
+            setAuthToken(token);
+        } catch (error: any) {
+            console.error("Registration error:", error);
+            throw new Error("Registration failed: " + error.message);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    // Fonction de mise à jour du profil utilisateur
-    const updateUserProfile = async (data: UpdateUserData): Promise<User> => {
-        setIsLoading(true);
-        return new Promise<User>((resolve, reject) => {
-            setTimeout(async () => {
-                try {
-                    if (currentUser) {
-                        // Créer un nouvel objet utilisateur avec les données mises à jour
-                        const updatedUser: User = {
-                            ...currentUser,
-                            username: data.username || currentUser.username,
-                            email: data.email || currentUser.email,
-                            profilePicture:
-                                data.profilePicture !== undefined
-                                    ? data.profilePicture
-                                    : currentUser.profilePicture,
-                        };
-
-                        // Enregistrer les données mises à jour
-                        await Preferences.set({
-                            key: "currentUser",
-                            value: JSON.stringify(updatedUser),
-                        });
-
-                        // Mettre à jour l'état
-                        setCurrentUser(updatedUser);
-                        setIsLoading(false);
-                        resolve(updatedUser);
-                    } else {
-                        setIsLoading(false);
-                        reject(new Error("Aucun utilisateur connecté"));
-                    }
-                } catch (error) {
-                    setIsLoading(false);
-                    reject(
-                        new Error("Erreur lors de la mise à jour du profil")
-                    );
-                }
-            }, 1000); // Simuler un délai réseau
-        });
+    const logout = async (): Promise<void> => {
+        try {
+            await Preferences.remove({ key: "authToken" });
+            setAuthToken(null);
+        } catch (error) {
+            console.error("Error during logout:", error);
+            throw new Error("Error during logout");
+        }
     };
 
-    // Objet de valeur à fournir aux composants consommateurs
+    const updateUserProfile = async (data: UpdateUserData): Promise<any> => {
+        setIsLoading(true);
+        try {
+            if (!authToken) {
+                throw new Error("No auth token found");
+            }
+
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            myHeaders.append("Authorization", `Bearer ${authToken}`);
+
+            const raw = JSON.stringify(data);
+
+            const requestOptions: RequestInit = {
+                method: "PUT",
+                headers: myHeaders,
+                body: raw,
+                redirect: "follow",
+            };
+
+            const response = await fetch(
+                "http://localhost/api/user/profile",
+                requestOptions
+            );
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || "Profile update failed");
+            }
+
+            // If the API returns the updated user data, you can return it.
+            // Otherwise, you might need to re-fetch user details based on the token.
+            return result;
+        } catch (error: any) {
+            console.error("Profile update error:", error);
+            throw new Error("Profile update failed: " + error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const value: AuthContextType = {
-        currentUser,
+        authToken,
         login,
         register,
         logout,
         updateUserProfile,
-        isAuthenticated: !!currentUser,
+        isAuthenticated: !!authToken,
         isLoading,
     };
 
